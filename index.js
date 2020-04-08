@@ -1,20 +1,27 @@
-const app = require(`express`)();
+const express = require(`express`);
+const app = express();
 const http = require(`http`).createServer(app);
 const io = require(`socket.io`)(http);
+
+let users = [];
 
 app.get(`/`, function(req, res) {
     res.sendFile(`${__dirname}/index.html`);
 });
 
-io.on(`connection`, function(socket) {
-    socket.on(`chat message`, function(msg) {
-        socket.broadcast.emit(`chat message`, msg);
-    });
-    io.emit(`connected message`, `a new user connected!`);
+app.use(`/static`, express.static(`${__dirname}/static`));
 
-    // socket.on(`set nickname`, function(msg) {
-    //     io.emit(`connected message`, `Nickname set: ${msg}`);
-    // });
+io.on(`connection`, function(socket) {
+    console.log(`a new user connected!`);
+    io.emit(`chat_message`, `a new user connected!`);
+    socket.on(`chat_message`, function(msg) {
+        io.emit(`chat_message`, msg);
+    });
+    socket.on(`join_room`, function(username) {
+        users.push({ username });
+        console.log(users);
+        io.emit(`chat_message`, `${username} joined`);
+    });
 });
 
 http.listen(4300, function() {
