@@ -1,0 +1,39 @@
+{
+    "name": "six-handed-euchre",
+    "version": "1.0.0",
+    "description": "A web application for playing six-handed euchre",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/mread1208/six-handed-euchre.git"
+    },
+    "author": "Michael Read",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/mread1208/six-handed-euchre/issues"
+    },
+    "homepage": "https://github.com/mread1208/six-handed-euchre#readme",
+    "dependencies": {
+        "express": "^4.17.1",
+        "socket.io": "^2.3.0"
+    },
+    "devDependencies": {
+        "babel-eslint": "^9.0.0",
+        "eslint": "^5.16.0",
+        "eslint-config-airbnb": "^17.1.1",
+        "eslint-config-prettier": "^4.3.0",
+        "eslint-config-wesbos": "0.0.19",
+        "eslint-plugin-html": "^5.0.5",
+        "eslint-plugin-import": "^2.20.2",
+        "eslint-plugin-jsx-a11y": "^6.2.3",
+        "eslint-plugin-prettier": "^3.1.2",
+        "eslint-plugin-react": "^7.19.0",
+        "eslint-plugin-react-hooks": "^1.7.0",
+        "prettier": "^1.19.1"
+    }
+}

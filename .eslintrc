@@ -1,0 +1,16 @@
+{
+    "extends": ["wesbos"],
+    "rules": {
+        "no-console": 1,
+        "quotes": ["error", "backtick"],
+        "prettier/prettier": [
+            "error",
+            {
+                "trailingComma": "es5",
+                "singleQuote": false,
+                "printWidth": 120,
+                "tabWidth": 4
+            }
+        ]
+    }
+}
