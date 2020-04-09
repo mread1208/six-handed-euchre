@@ -115,6 +115,12 @@ app.get(`/game/:id`, (req, res) => {
     }
 });
 
+app.get(`/get-user`, (req, res) => {
+    if (req.session.user && req.cookies.user_sid) {
+        res.json({ username: req.session.user.username });
+    }
+});
+
 // route for user logout
 app.get(`/logout`, (req, res) => {
     if (req.session.user && req.cookies.user_sid) {

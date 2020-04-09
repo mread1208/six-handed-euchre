@@ -1,0 +1,24 @@
+/**
+ * This is not a production server yet!
+ * This is only a minimal backend to get started.
+ */
+
+import * as express from "express";
+import * as session from "express-session";
+import * as bodyParser from "body-parser";
+import * as cookieParser from "cookie-parser";
+import * as morgan from "morgan";
+import * as http from "http";
+
+const app = express();
+const server = http.Server(app);
+
+app.get("/api", (req, res) => {
+    res.send({ message: "Welcome to api!" });
+});
+
+const port = process.env.port || 3333;
+const server = app.listen(port, () => {
+    console.log(`Listening at http://localhost:${port}/api`);
+});
+server.on("error", console.error);
