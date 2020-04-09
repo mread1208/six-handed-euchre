@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Login</title>
+        <title>Game Boards</title>
         <link
             rel="stylesheet"
             href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
@@ -11,7 +11,7 @@
     </head>
     <body class="container">
         <div class="page-header">
-            <h1>6-Handed Euchre Login</h1>
+            <h1>Game Boards</h1>
         </div>
 
         <nav class="navbar navbar-default">
@@ -26,6 +26,7 @@
 
                     <ul class="nav navbar-nav navbar-right">
                         <li><a href="/login">Log In</a></li>
+                        <li><a href="/logout">Log Out</a></li>
                     </ul>
                 </div>
                 <!-- /.navbar-collapse -->
@@ -34,19 +35,12 @@
         </nav>
 
         <div class="container row">
+            <h1>Hi, Welcome</h1>
+            <p>Here's a list of all the active games.</p>
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <form action="/login" method="post">
-                        <div class="form-group">
-                            <label>Username:</label>
-                            <input type="text" name="username" />
-                        </div>
-                        <div class="form-group">
-                            <label>Password:</label>
-                            <input type="password" name="password" />
-                        </div>
-                        <button class="btn btn-primary" type="submit">Log In</button>
-                    </form>
+                    <a href="/game/1" class="btn btn-default">Join Game 1</a>
+                    <a href="/game/2" class="btn btn-default">Join Game 2</a>
                 </div>
             </div>
         </div>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Login Here</title>
+        <title>Game</title>
         <link
             rel="stylesheet"
             href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
@@ -11,7 +11,7 @@
     </head>
     <body class="container">
         <div class="page-header">
-            <h1>Simple Auth-System</h1>
+            <h1>6-Handed Euchre Game {{GAME NUMBER HERE}}</h1>
         </div>
 
         <nav class="navbar navbar-default">
@@ -21,7 +21,7 @@
                     <ul class="nav navbar-nav">
                         <li><a href="/">Home</a></li>
                         <li><a href="/signup">Sign Up</a></li>
-                        <li><a href="/dashboard">Dashboard</a></li>
+                        <li><a href="/game-boards">Games</a></li>
                     </ul>
 
                     <ul class="nav navbar-nav navbar-right">
@@ -35,7 +35,30 @@
         </nav>
 
         <div class="container row">
-            <h1>Hi, Welcome to your Dashboard</h1>
+            <h1>You're in a game!</h1>
+            <p>Hurry Tom you're taking too damn long!</p>
         </div>
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+            (function() {
+                const socket = io();
+                const nicknameForm = document.querySelector("#nickname");
+                const messagesList = document.querySelector("#messages");
+
+                nicknameForm.addEventListener("submit", e => {
+                    e.preventDefault();
+                    socket.emit(`join_room`, e.target.name.value);
+                    e.target.name.value = "";
+                    return false;
+                });
+
+                socket.on(`chat_message`, msg => {
+                    const listItem = document.createElement(`li`);
+                    listItem.textContent = msg;
+                    messagesList.appendChild(listItem);
+                });
+            })();
+        </script>
     </body>
 </html>

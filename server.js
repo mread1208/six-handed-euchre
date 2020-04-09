@@ -1,14 +1,16 @@
 const express = require(`express`);
 const bodyParser = require(`body-parser`);
 const cookieParser = require(`cookie-parser`);
-
 const session = require(`express-session`);
 const morgan = require(`morgan`);
-const User = require(`./models/user`);
-const port = 4300;
-// const io = require(`socket.io`)(app);
-
 const app = express();
+const server = require(`http`).Server(app);
+
+const User = require(`./models/user`);
+const io = require(`socket.io`)(server);
+
+const port = 4300;
+
 // set our application port
 app.set(`port`, port);
 
@@ -46,7 +48,7 @@ app.use((req, res, next) => {
 // middleware function to check for logged-in users
 const sessionChecker = (req, res, next) => {
     if (req.session.user && req.cookies.user_sid) {
-        res.redirect(`/dashboard`);
+        res.redirect(`/game-boards`);
     } else {
         next();
     }
@@ -70,7 +72,7 @@ app.route(`/signup`)
         })
             .then(user => {
                 req.session.user = user.dataValues;
-                res.redirect(`/dashboard`);
+                res.redirect(`/game-boards`);
             })
             .catch(error => {
                 res.redirect(`/signup`);
@@ -84,7 +86,6 @@ app.route(`/login`)
     })
     .post((req, res) => {
         const { username, password } = req.body;
-
         User.findOne({ where: { username } }).then(function(user) {
             if (!user) {
                 res.redirect(`/login`);
@@ -92,15 +93,23 @@ app.route(`/login`)
                 res.redirect(`/login`);
             } else {
                 req.session.user = user.dataValues;
-                res.redirect(`/dashboard`);
+                res.redirect(`/game-boards`);
             }
         });
     });
 
-// route for user's dashboard
-app.get(`/dashboard`, (req, res) => {
+// route for game-boards
+app.get(`/game-boards`, (req, res) => {
     if (req.session.user && req.cookies.user_sid) {
-        res.sendFile(`${__dirname}/public/dashboard.html`);
+        res.sendFile(`${__dirname}/public/game-boards.html`);
+    } else {
+        res.redirect(`/login`);
+    }
+});
+
+app.get(`/game/:id`, (req, res) => {
+    if (req.session.user && req.cookies.user_sid) {
+        res.sendFile(`${__dirname}/public/game.html`);
     } else {
         res.redirect(`/login`);
     }
@@ -125,15 +134,12 @@ app.use(function(req, res, next) {
 app.listen(app.get(`port`), () => console.log(`App started on port ${app.get(`port`)}`));
 
 // Socket IO stuff
-// io.on(`connection`, function(socket) {
-//     console.log(`a new user connected!`);
-//     io.emit(`chat_message`, `a new user connected!`);
-//     socket.on(`chat_message`, function(msg) {
-//         io.emit(`chat_message`, msg);
-//     });
-//     socket.on(`join_room`, function(username) {
-//         users.push({ username });
-//         console.log(users);
-//         io.emit(`chat_message`, `${username} joined`);
-//     });
-// });
+io.on(`connection`, function(socket) {
+    io.emit(`chat_message`, `a new user connected!`);
+    socket.on(`chat_message`, function(msg) {
+        io.emit(`chat_message`, msg);
+    });
+    socket.on(`join_room`, function(username) {
+        io.emit(`chat_message`, `${username} joined`);
+    });
+});
