@@ -1,13 +1,13 @@
-const express = require(`express`);
 const bodyParser = require(`body-parser`);
 const cookieParser = require(`cookie-parser`);
 const session = require(`express-session`);
 const morgan = require(`morgan`);
-const app = express();
+
+const app = require(`express`)();
 const server = require(`http`).Server(app);
+const io = require(`socket.io`)(server);
 
 const User = require(`./models/user`);
-const io = require(`socket.io`)(server);
 
 const port = 4300;
 
@@ -131,11 +131,11 @@ app.use(function(req, res, next) {
 });
 
 // start the express server
-app.listen(app.get(`port`), () => console.log(`App started on port ${app.get(`port`)}`));
+server.listen(app.get(`port`), () => console.log(`App started on port ${app.get(`port`)}`));
 
 // Socket IO stuff
 io.on(`connection`, function(socket) {
-    io.emit(`chat_message`, `a new user connected!`);
+    // io.emit(`chat_message`, `a new user connected!`);
     socket.on(`chat_message`, function(msg) {
         io.emit(`chat_message`, msg);
     });

@@ -38,17 +38,24 @@
             <h1>You're in a game!</h1>
             <p>Hurry Tom you're taking too damn long!</p>
         </div>
+        <div class="container row">
+            <form action="" id="messageForm">
+                <input type="text" value="" id="message" />
+                <button class="btn btn-primary">Submit Message</button>
+            </form>
+            <ul id="messages"></ul>
+        </div>
 
         <script src="/socket.io/socket.io.js"></script>
         <script>
             (function() {
-                const socket = io();
-                const nicknameForm = document.querySelector("#nickname");
+                const socket = io.connect("http://localhost:4300");
+                const msgForm = document.querySelector("#messageForm");
                 const messagesList = document.querySelector("#messages");
 
-                nicknameForm.addEventListener("submit", e => {
+                msgForm.addEventListener("submit", e => {
                     e.preventDefault();
-                    socket.emit(`join_room`, e.target.name.value);
+                    socket.emit(`chat_message`, e.target.message.value);
                     e.target.name.value = "";
                     return false;
                 });
