@@ -85,4 +85,6 @@ Visit the [Nx Documentation](https://nx.dev/angular) to learn more.
 
 ## Postgres Documentation
 
-https://www.codementor.io/@mayowa.a/how-to-build-a-simple-session-based-authentication-system-with-nodejs-from-scratch-6vn67mcy3
+<!-- https://www.codementor.io/@mayowa.a/how-to-build-a-simple-session-based-authentication-system-with-nodejs-from-scratch-6vn67mcy3 -->
+
+https://www.toptal.com/nodejs/secure-rest-api-in-nodejs
