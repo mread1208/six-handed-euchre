@@ -8,6 +8,7 @@ import * as session from "express-session";
 import * as bodyParser from "body-parser";
 import * as cookieParser from "cookie-parser";
 import * as morgan from "morgan";
+import User from "./app/models/user";
 
 const app = express();
 const server = require(`http`).Server(app);
@@ -25,12 +26,12 @@ app.use(cookieParser());
 // initialize express-session to allow us track the logged-in user across sessions.
 app.use(
     session({
-        key: `user_sid`,
+        // key: `user_sid`,
         secret: `somerandonstuffs`,
         resave: false,
         saveUninitialized: false,
         cookie: {
-            expires: 600000,
+            maxAge: 600000,
         },
     })
 );
@@ -61,6 +62,25 @@ app.use(function(req, res, next) {
 app.get("/api", (req, res) => {
     res.send({ message: "Welcome to api!" });
 });
+
+app.route(`/signup`)
+    // .get(sessionChecker, (req, res) => {
+    //     res.sendFile(`${__dirname}/public/signup.html`);
+    // })
+    .post((req, res) => {
+        User.create({
+            username: req.body.username,
+            email: req.body.email,
+            password: req.body.password,
+        })
+            .then(user => {
+                req.session.user = user.dataValues;
+                res.redirect(`/game-boards`);
+            })
+            .catch(error => {
+                res.redirect(`/signup`);
+            });
+    });
 
 const port = process.env.port || 3333;
 server.listen(port, () => {

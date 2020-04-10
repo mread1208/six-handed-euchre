@@ -1,188 +1,213 @@
 {
-    "version": 1,
-    "projects": {
-        "six-handed-ng": {
-            "projectType": "application",
-            "schematics": {
-                "@nrwl/angular:component": {
-                    "style": "scss"
-                }
-            },
-            "root": "apps/six-handed-ng",
-            "sourceRoot": "apps/six-handed-ng/src",
-            "prefix": "six-handed-euchre",
-            "architect": {
-                "build": {
-                    "builder": "@angular-devkit/build-angular:browser",
-                    "options": {
-                        "outputPath": "dist/apps/six-handed-ng",
-                        "index": "apps/six-handed-ng/src/index.html",
-                        "main": "apps/six-handed-ng/src/main.ts",
-                        "polyfills": "apps/six-handed-ng/src/polyfills.ts",
-                        "tsConfig": "apps/six-handed-ng/tsconfig.app.json",
-                        "aot": true,
-                        "assets": ["apps/six-handed-ng/src/favicon.ico", "apps/six-handed-ng/src/assets"],
-                        "styles": ["apps/six-handed-ng/src/styles.scss"],
-                        "scripts": []
-                    },
-                    "configurations": {
-                        "production": {
-                            "fileReplacements": [
-                                {
-                                    "replace": "apps/six-handed-ng/src/environments/environment.ts",
-                                    "with": "apps/six-handed-ng/src/environments/environment.prod.ts"
-                                }
-                            ],
-                            "optimization": true,
-                            "outputHashing": "all",
-                            "sourceMap": false,
-                            "extractCss": true,
-                            "namedChunks": false,
-                            "extractLicenses": true,
-                            "vendorChunk": false,
-                            "buildOptimizer": true,
-                            "budgets": [
-                                {
-                                    "type": "initial",
-                                    "maximumWarning": "2mb",
-                                    "maximumError": "5mb"
-                                },
-                                {
-                                    "type": "anyComponentStyle",
-                                    "maximumWarning": "6kb",
-                                    "maximumError": "10kb"
-                                }
-                            ]
-                        }
-                    }
-                },
-                "serve": {
-                    "builder": "@angular-devkit/build-angular:dev-server",
-                    "options": {
-                        "browserTarget": "six-handed-ng:build",
-                        "proxyConfig": "apps/six-handed-ng/proxy.conf.json"
-                    },
-                    "configurations": {
-                        "production": {
-                            "browserTarget": "six-handed-ng:build:production"
-                        }
-                    }
-                },
-                "extract-i18n": {
-                    "builder": "@angular-devkit/build-angular:extract-i18n",
-                    "options": {
-                        "browserTarget": "six-handed-ng:build"
-                    }
-                },
-                "lint": {
-                    "builder": "@angular-devkit/build-angular:tslint",
-                    "options": {
-                        "tsConfig": ["apps/six-handed-ng/tsconfig.app.json", "apps/six-handed-ng/tsconfig.spec.json"],
-                        "exclude": ["**/node_modules/**", "!apps/six-handed-ng/**"]
-                    }
-                },
-                "test": {
-                    "builder": "@nrwl/jest:jest",
-                    "options": {
-                        "jestConfig": "apps/six-handed-ng/jest.config.js",
-                        "tsConfig": "apps/six-handed-ng/tsconfig.spec.json",
-                        "passWithNoTests": true,
-                        "setupFile": "apps/six-handed-ng/src/test-setup.ts"
-                    }
-                }
-            }
-        },
-        "six-handed-ng-e2e": {
-            "root": "apps/six-handed-ng-e2e",
-            "sourceRoot": "apps/six-handed-ng-e2e/src",
-            "projectType": "application",
-            "architect": {
-                "e2e": {
-                    "builder": "@nrwl/cypress:cypress",
-                    "options": {
-                        "cypressConfig": "apps/six-handed-ng-e2e/cypress.json",
-                        "tsConfig": "apps/six-handed-ng-e2e/tsconfig.e2e.json",
-                        "devServerTarget": "six-handed-ng:serve"
-                    },
-                    "configurations": {
-                        "production": {
-                            "devServerTarget": "six-handed-ng:serve:production"
-                        }
-                    }
-                },
-                "lint": {
-                    "builder": "@angular-devkit/build-angular:tslint",
-                    "options": {
-                        "tsConfig": ["apps/six-handed-ng-e2e/tsconfig.e2e.json"],
-                        "exclude": ["**/node_modules/**", "!apps/six-handed-ng-e2e/**"]
-                    }
-                }
-            }
-        },
-        "api": {
-            "root": "apps/api",
-            "sourceRoot": "apps/api/src",
-            "projectType": "application",
-            "prefix": "api",
-            "schematics": {},
-            "architect": {
-                "build": {
-                    "builder": "@nrwl/node:build",
-                    "options": {
-                        "outputPath": "dist/apps/api",
-                        "main": "apps/api/src/main.ts",
-                        "tsConfig": "apps/api/tsconfig.app.json",
-                        "assets": ["apps/api/src/assets"]
-                    },
-                    "configurations": {
-                        "production": {
-                            "optimization": true,
-                            "extractLicenses": true,
-                            "inspect": false,
-                            "fileReplacements": [
-                                {
-                                    "replace": "apps/api/src/environments/environment.ts",
-                                    "with": "apps/api/src/environments/environment.prod.ts"
-                                }
-                            ]
-                        }
-                    }
-                },
-                "serve": {
-                    "builder": "@nrwl/node:execute",
-                    "options": {
-                        "buildTarget": "api:build"
-                    }
-                },
-                "lint": {
-                    "builder": "@angular-devkit/build-angular:tslint",
-                    "options": {
-                        "tsConfig": ["apps/api/tsconfig.app.json", "apps/api/tsconfig.spec.json"],
-                        "exclude": ["**/node_modules/**", "!apps/api/**"]
-                    }
-                },
-                "test": {
-                    "builder": "@nrwl/jest:jest",
-                    "options": {
-                        "jestConfig": "apps/api/jest.config.js",
-                        "tsConfig": "apps/api/tsconfig.spec.json",
-                        "passWithNoTests": true
-                    }
-                }
-            }
+  "version": 1,
+  "projects": {
+    "six-handed-ng": {
+      "projectType": "application",
+      "schematics": {
+        "@nrwl/angular:component": {
+          "style": "scss"
         }
-    },
-    "cli": {
-        "defaultCollection": "@nrwl/angular"
-    },
-    "schematics": {
-        "@nrwl/angular:application": {
-            "unitTestRunner": "jest",
-            "e2eTestRunner": "cypress"
+      },
+      "root": "apps/six-handed-ng",
+      "sourceRoot": "apps/six-handed-ng/src",
+      "prefix": "six-handed-euchre",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "dist/apps/six-handed-ng",
+            "index": "apps/six-handed-ng/src/index.html",
+            "main": "apps/six-handed-ng/src/main.ts",
+            "polyfills": "apps/six-handed-ng/src/polyfills.ts",
+            "tsConfig": "apps/six-handed-ng/tsconfig.app.json",
+            "aot": true,
+            "assets": [
+              "apps/six-handed-ng/src/favicon.ico",
+              "apps/six-handed-ng/src/assets"
+            ],
+            "styles": [
+              "apps/six-handed-ng/src/styles.scss"
+            ],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "apps/six-handed-ng/src/environments/environment.ts",
+                  "with": "apps/six-handed-ng/src/environments/environment.prod.ts"
+                }
+              ],
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "extractCss": true,
+              "namedChunks": false,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": true,
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "6kb",
+                  "maximumError": "10kb"
+                }
+              ]
+            }
+          }
         },
-        "@nrwl/angular:library": {
-            "unitTestRunner": "jest"
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "browserTarget": "six-handed-ng:build",
+            "proxyConfig": "apps/six-handed-ng/proxy.conf.json"
+          },
+          "configurations": {
+            "production": {
+              "browserTarget": "six-handed-ng:build:production"
+            }
+          }
+        },
+        "extract-i18n": {
+          "builder": "@angular-devkit/build-angular:extract-i18n",
+          "options": {
+            "browserTarget": "six-handed-ng:build"
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "apps/six-handed-ng/tsconfig.app.json",
+              "apps/six-handed-ng/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**",
+              "!apps/six-handed-ng/**"
+            ]
+          }
+        },
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "apps/six-handed-ng/jest.config.js",
+            "tsConfig": "apps/six-handed-ng/tsconfig.spec.json",
+            "passWithNoTests": true,
+            "setupFile": "apps/six-handed-ng/src/test-setup.ts"
+          }
         }
+      }
     },
-    "defaultProject": "six-handed-ng"
+    "six-handed-ng-e2e": {
+      "root": "apps/six-handed-ng-e2e",
+      "sourceRoot": "apps/six-handed-ng-e2e/src",
+      "projectType": "application",
+      "architect": {
+        "e2e": {
+          "builder": "@nrwl/cypress:cypress",
+          "options": {
+            "cypressConfig": "apps/six-handed-ng-e2e/cypress.json",
+            "tsConfig": "apps/six-handed-ng-e2e/tsconfig.e2e.json",
+            "devServerTarget": "six-handed-ng:serve"
+          },
+          "configurations": {
+            "production": {
+              "devServerTarget": "six-handed-ng:serve:production"
+            }
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "apps/six-handed-ng-e2e/tsconfig.e2e.json"
+            ],
+            "exclude": [
+              "**/node_modules/**",
+              "!apps/six-handed-ng-e2e/**"
+            ]
+          }
+        }
+      }
+    },
+    "api": {
+      "root": "apps/api",
+      "sourceRoot": "apps/api/src",
+      "projectType": "application",
+      "prefix": "api",
+      "schematics": {},
+      "architect": {
+        "build": {
+          "builder": "@nrwl/node:build",
+          "options": {
+            "outputPath": "dist/apps/api",
+            "main": "apps/api/src/main.ts",
+            "tsConfig": "apps/api/tsconfig.app.json",
+            "assets": [
+              "apps/api/src/assets"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "optimization": true,
+              "extractLicenses": true,
+              "inspect": false,
+              "fileReplacements": [
+                {
+                  "replace": "apps/api/src/environments/environment.ts",
+                  "with": "apps/api/src/environments/environment.prod.ts"
+                }
+              ]
+            }
+          }
+        },
+        "serve": {
+          "builder": "@nrwl/node:execute",
+          "options": {
+            "buildTarget": "api:build"
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "apps/api/tsconfig.app.json",
+              "apps/api/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**",
+              "!apps/api/**"
+            ]
+          }
+        },
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "apps/api/jest.config.js",
+            "tsConfig": "apps/api/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        }
+      }
+    }
+  },
+  "cli": {
+    "defaultCollection": "@nrwl/angular",
+    "analytics": "1c705e8e-1cf1-4354-a0b2-ab7ac7f48dc4"
+  },
+  "schematics": {
+    "@nrwl/angular:application": {
+      "unitTestRunner": "jest",
+      "e2eTestRunner": "cypress"
+    },
+    "@nrwl/angular:library": {
+      "unitTestRunner": "jest"
+    }
+  },
+  "defaultProject": "six-handed-ng"
 }
