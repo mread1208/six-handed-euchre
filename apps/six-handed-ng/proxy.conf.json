@@ -6,5 +6,9 @@
     "/api/auth": {
         "target": "http://localhost:3333",
         "secure": false
+    },
+    "/api/sign-up": {
+        "target": "http://localhost:3333",
+        "secure": false
     }
 }

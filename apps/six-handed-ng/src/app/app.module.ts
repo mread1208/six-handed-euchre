@@ -3,12 +3,21 @@ import { NgModule } from "@angular/core";
 
 import { AppComponent } from "./app.component";
 import { LoginComponent } from "./login/login.component";
+import { SignUpComponent } from "./sign-up/sign-up.component";
 import { RouterModule, Routes } from "@angular/router";
 import { HttpClientModule } from "@angular/common/http";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { GamesDashboardComponent } from "./games-dashboard/games-dashboard.component";
+import { AuthGuard } from "./auth/auth.guard";
 
 const appRoutes: Routes = [
     { path: "login", component: LoginComponent },
+    { path: "sign-up", component: SignUpComponent },
+    {
+        path: "games-dashboard",
+        component: GamesDashboardComponent,
+        canActivate: [AuthGuard],
+    },
     // { path: 'games/:id',      component: GameComponent },
     // {
     //   path: 'games',
@@ -20,7 +29,7 @@ const appRoutes: Routes = [
 ];
 
 @NgModule({
-    declarations: [AppComponent, LoginComponent],
+    declarations: [AppComponent, LoginComponent, SignUpComponent, GamesDashboardComponent],
     imports: [
         RouterModule.forRoot(
             appRoutes

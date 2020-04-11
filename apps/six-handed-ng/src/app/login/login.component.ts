@@ -1,6 +1,7 @@
 import { Component, OnInit } from "@angular/core";
-import { HttpClient } from "@angular/common/http";
+import { Router } from "@angular/router";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
+import { AuthService } from "./../auth/auth.service";
 
 @Component({
     selector: "six-handed-euchre-login",
@@ -9,39 +10,52 @@ import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 })
 export class LoginComponent implements OnInit {
     loginForm: FormGroup;
+    message: string;
 
-    constructor(private http: HttpClient, public formBuilder: FormBuilder) {
-        this.fetch();
+    constructor(public authService: AuthService, public formBuilder: FormBuilder, public router: Router) {
         this.loginForm = formBuilder.group({
-            // firstName: ["", Validators.required],
-            // lastName: ["", Validators.required],
             email: [
-                "",
+                "test@test.com",
                 Validators.compose([
                     Validators.required,
                     Validators.pattern("^[a-z0-9._%+-]+@[a-z0-9.-]+.[a-z]{2,4}$"),
                 ]),
             ],
-            password: ["", Validators.required],
+            password: ["s3cr3tp4sswo4rd", Validators.required],
         });
     }
 
     ngOnInit(): void {}
 
-    fetch() {
-        this.http.get("/api/").subscribe(data => console.log(data));
+    setMessage() {
+        this.message = "Logged " + (this.authService.isLoggedIn ? "in" : "out");
     }
 
     login(form: FormGroup, event: Event) {
         event.preventDefault();
 
         if (form.valid) {
-            // const firstName = form.get("firstName").value;
-            // const lastName = form.get("lastName").value;
             const email = form.get("email").value;
             const password = form.get("password").value;
 
-            this.http.post("http://localhost:3333/auth/", { email, password }).subscribe(data => console.log(data));
+            // this.http.post("/api/auth/", { email, password }).subscribe(data => console.log(data));
+
+            this.authService.login({ email, password }).subscribe(() => {
+                this.setMessage();
+                if (this.authService.isLoggedIn) {
+                    // Usually you would use the redirect URL from the auth service.
+                    // However to keep the example simple, we will always redirect to `/admin`.
+                    const redirectUrl = "/games-dashboard";
+
+                    // Redirect the user
+                    this.router.navigate([redirectUrl]);
+                }
+            });
         }
+    }
+
+    logout() {
+        this.authService.logout();
+        this.setMessage();
     }
 }
