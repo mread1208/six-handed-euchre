@@ -10,6 +10,8 @@ import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { GamesDashboardComponent } from "./games-dashboard/games-dashboard.component";
 import { AuthGuard } from "./auth/auth.guard";
 
+import { GamesService } from "./games-dashboard/games.service";
+
 const appRoutes: Routes = [
     { path: "login", component: LoginComponent },
     { path: "sign-up", component: SignUpComponent },
@@ -40,7 +42,7 @@ const appRoutes: Routes = [
         FormsModule,
         ReactiveFormsModule,
     ],
-    providers: [],
+    providers: [GamesService],
     bootstrap: [AppComponent],
 })
 export class AppModule {}

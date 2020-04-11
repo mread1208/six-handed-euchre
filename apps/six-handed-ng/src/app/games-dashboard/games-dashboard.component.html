@@ -1,1 +1,6 @@
 <p>games-dashboard works!</p>
+<a (click)="sendMessage('hello world')">SEND MESSAGE</a>
+
+<ul>
+    <li *ngFor="let message of messages">{{ message }}</li>
+</ul>
