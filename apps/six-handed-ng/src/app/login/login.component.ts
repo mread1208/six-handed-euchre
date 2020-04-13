@@ -40,7 +40,7 @@ export class LoginComponent implements OnInit {
 
             // this.http.post("/api/auth/", { email, password }).subscribe(data => console.log(data));
 
-            this.authService.login({ email, password }).subscribe(() => {
+            this.authService.login(email, password).subscribe(() => {
                 this.setMessage();
                 if (this.authService.isLoggedIn) {
                     // Usually you would use the redirect URL from the auth service.

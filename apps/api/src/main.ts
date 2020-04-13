@@ -44,7 +44,6 @@ const io = require(`socket.io`)(server);
 io.on(`connection`, function(socket) {
     // io.emit(`chat_message`, `a new user connected!`);
     socket.on(`chat_message`, function(msg) {
-        console.log(msg);
         io.emit(`chat_message`, msg);
     });
     socket.on(`join_room`, function(username) {

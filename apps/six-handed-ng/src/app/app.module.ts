@@ -5,12 +5,14 @@ import { AppComponent } from "./app.component";
 import { LoginComponent } from "./login/login.component";
 import { SignUpComponent } from "./sign-up/sign-up.component";
 import { RouterModule, Routes } from "@angular/router";
-import { HttpClientModule } from "@angular/common/http";
+import { HttpClientModule, HTTP_INTERCEPTORS } from "@angular/common/http";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { GamesDashboardComponent } from "./games-dashboard/games-dashboard.component";
 import { AuthGuard } from "./auth/auth.guard";
+import { AuthInterceptor } from "./auth/authinterceptor.service";
 
 import { GamesService } from "./games-dashboard/games.service";
+import { GameComponent } from "./game/game.component";
 
 const appRoutes: Routes = [
     { path: "login", component: LoginComponent },
@@ -18,6 +20,11 @@ const appRoutes: Routes = [
     {
         path: "games-dashboard",
         component: GamesDashboardComponent,
+        canActivate: [AuthGuard],
+    },
+    {
+        path: "game/:id",
+        component: GameComponent,
         canActivate: [AuthGuard],
     },
     // { path: 'games/:id',      component: GameComponent },
@@ -31,7 +38,7 @@ const appRoutes: Routes = [
 ];
 
 @NgModule({
-    declarations: [AppComponent, LoginComponent, SignUpComponent, GamesDashboardComponent],
+    declarations: [AppComponent, LoginComponent, SignUpComponent, GamesDashboardComponent, GameComponent],
     imports: [
         RouterModule.forRoot(
             appRoutes
@@ -42,7 +49,7 @@ const appRoutes: Routes = [
         FormsModule,
         ReactiveFormsModule,
     ],
-    providers: [GamesService],
+    providers: [GamesService, { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }],
     bootstrap: [AppComponent],
 })
 export class AppModule {}
