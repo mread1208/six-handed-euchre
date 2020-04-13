@@ -6,6 +6,7 @@ const uuid = require("uuid");
 
 exports.login = (req, res) => {
     try {
+        console.log(req.body);
         let refreshId = req.body.userId + jwtSecret;
         let salt = crypto.randomBytes(16).toString("base64");
         let hash = crypto
@@ -17,7 +18,12 @@ exports.login = (req, res) => {
         let b = new Buffer(hash);
         let refresh_token = b.toString("base64");
         // res.status(201).send({accessToken: token, refreshToken: refresh_token});
-        res.status(201).send({ accessToken: token, expiresIn: jwtExpires });
+        res.status(201).send({
+            accessToken: token,
+            userId: req.body.userId,
+            email: req.body.email,
+            name: req.body.name,
+        });
     } catch (err) {
         res.status(500).send({ errors: err });
     }

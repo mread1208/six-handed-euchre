@@ -1,7 +1,6 @@
 const GameModel = require("../models/game.model");
 
 exports.list = (req, res) => {
-    console.log("LIST");
     let limit = req.query.limit && req.query.limit <= 100 ? parseInt(req.query.limit) : 10;
     let page = 0;
     if (req.query) {

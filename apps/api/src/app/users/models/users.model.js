@@ -32,6 +32,7 @@ exports.findById = id => {
         result = result.toJSON();
         delete result._id;
         delete result.__v;
+        delete result.password;
         return result;
     });
 };

@@ -20,7 +20,10 @@ export class GamesService {
         this.socket.emit("chat_message", message);
     }
 
-    public getMessages = () => {
+    public createRoom = roomName => {
+        this.socket.emit("createRoom", roomName);
+    };
+    public getRooms = () => {
         return Observable.create(observer => {
             this.socket.on("chat_message", message => {
                 observer.next(message);
@@ -29,5 +32,12 @@ export class GamesService {
     };
     public getGames = () => {
         return this.http.get<Game>("/api/games/");
+    };
+
+    public joinRoom = (room, name) => {
+        this.socket.emit("joinRoom", room, name);
+    };
+    public leaveRoom = (room, name) => {
+        this.socket.emit("leave_room", room, name);
     };
 }

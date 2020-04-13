@@ -63,7 +63,7 @@
         "socket.io-client": "^2.3.0",
         "swagger-ui-express": "^4.1.2",
         "sync-request": "^6.1.0",
-        "uuid": "^3.3.3",
+        "uuid": "^3.4.0",
         "zone.js": "^0.10.2"
     },
     "devDependencies": {

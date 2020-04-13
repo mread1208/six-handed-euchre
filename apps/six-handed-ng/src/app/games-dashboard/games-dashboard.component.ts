@@ -14,16 +14,20 @@ export class GamesDashboardComponent implements OnInit {
     constructor(private gamesService: GamesService) {}
 
     ngOnInit(): void {
-        this.gamesService.getMessages().subscribe((message: string) => {
-            this.messages.push(message);
+        this.gamesService.getRooms().subscribe(room => {
+            console.log(room);
+            this.messages.push(room);
         });
         this.gamesService.getGames().subscribe(game => {
             this.games.push(game);
         });
     }
 
+    createRoom(roomName, event) {
+        event.preventDefault();
+        this.gamesService.createRoom(roomName);
+    }
     sendMessage(message) {
-        console.log("click");
         this.gamesService.sendMessage(message);
     }
 }

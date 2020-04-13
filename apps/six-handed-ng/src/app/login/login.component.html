@@ -1,4 +1,4 @@
-<form [formGroup]="loginForm" (ngSubmit)="login(loginForm, $event)">
+<form [formGroup]="loginForm" (ngSubmit)="login()">
     <label for="email">Email</label>
     <input type="email" formControlName="email" required />
     <label for="password">Password</label>
