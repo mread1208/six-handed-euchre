@@ -6,6 +6,7 @@ const bodyParser = require("body-parser");
 
 const AuthorizationRouter = require("./app/authorization/routes.config");
 const UsersRouter = require("./app/users/routes.config");
+const GamesRouter = require("./app/games/routes.config");
 
 app.get("/api", (req, res) => {
     res.send({ message: "Welcome to api!" });
@@ -27,6 +28,7 @@ app.use(function(req, res, next) {
 app.use(bodyParser.json());
 AuthorizationRouter.routesConfig(app);
 UsersRouter.routesConfig(app);
+GamesRouter.routesConfig(app);
 
 // route for handling 404 requests(unavailable routes)
 app.use(function(req, res, next) {

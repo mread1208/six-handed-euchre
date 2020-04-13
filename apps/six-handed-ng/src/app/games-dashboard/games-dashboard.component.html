@@ -1,5 +1,6 @@
 <p>games-dashboard works!</p>
-<a (click)="sendMessage('hello world')">SEND MESSAGE</a>
+<p><a (click)="sendMessage('hello world')">SEND MESSAGE</a></p>
+<p><a routerLink="/games/1">Game 1</a></p>
 
 <ul>
     <li *ngFor="let message of messages">{{ message }}</li>
