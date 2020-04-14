@@ -25,8 +25,15 @@ export class GamesService {
     };
     public getRooms = () => {
         return Observable.create(observer => {
-            this.socket.on("getRoomNames", room => {
-                observer.next(room);
+            this.socket.on("getRoomNames", rooms => {
+                observer.next(rooms);
+            });
+        });
+    };
+    public getRoomGameUsers = room => {
+        return Observable.create(observer => {
+            this.socket.on("getRoomGameUsers", gameUsers => {
+                observer.next(gameUsers);
             });
         });
     };
@@ -34,10 +41,10 @@ export class GamesService {
     //     return this.http.get<Game>("/api/games/");
     // };
 
-    public joinRoom = (room, callback) => {
-        this.socket.emit("joinRoom", room, callback);
+    public joinRoom = (room, gameUser) => {
+        this.socket.emit("joinRoom", room, gameUser);
     };
-    public leaveRoom = (room, name) => {
-        this.socket.emit("leave_room", room, name);
+    public leaveRoom = (room, gameUser) => {
+        this.socket.emit("leaveRoom", room, gameUser);
     };
 }

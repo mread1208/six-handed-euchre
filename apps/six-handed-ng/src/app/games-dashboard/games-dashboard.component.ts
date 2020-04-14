@@ -9,17 +9,14 @@ import { Game } from "../models/Game";
 })
 export class GamesDashboardComponent implements OnInit {
     messages: string[] = [];
-    games: Game[] = [];
+    rooms: Game[] = [];
 
     constructor(private gamesService: GamesService) {}
 
     ngOnInit(): void {
-        this.gamesService.getRooms().subscribe(room => {
-            this.games.push(room);
+        this.gamesService.getRooms().subscribe(rooms => {
+            this.rooms = rooms;
         });
-        // this.gamesService.getGames().subscribe(game => {
-        //     this.games.push(game);
-        // });
     }
 
     createRoom(roomName, event) {

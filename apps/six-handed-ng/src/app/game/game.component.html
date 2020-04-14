@@ -1,5 +1,6 @@
 <p>game works!</p>
+<h2>Players in this room</h2>
 <ul>
-    <li *ngFor="let message of messages">{{ message }}</li>
+    <li *ngFor="let player of players">{{ player }}</li>
 </ul>
-<a href="#" (click)="backToDashboard($event)">Back to games dashboard</a>
+<a routerLink="/games-dashboard">Back to games dashboard</a>

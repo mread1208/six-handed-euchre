@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from "@angular/core";
-import { Router } from "@angular/router";
+import { Router, ActivatedRoute } from "@angular/router";
 import { Subscription } from "rxjs";
 
 import { GamesService } from "./../games-dashboard/games.service";
@@ -12,28 +12,31 @@ import { User } from "../models/User";
     styleUrls: ["./game.component.css"],
 })
 export class GameComponent implements OnInit, OnDestroy {
-    messages: string[] = [];
+    players: string[] = [];
     public currentUser: User;
-    private gameSub: Subscription;
+    private gameId: string;
 
-    constructor(private gamesService: GamesService, private authService: AuthService, public router: Router) {
+    constructor(
+        private gamesService: GamesService,
+        private authService: AuthService,
+        public router: Router,
+        private route: ActivatedRoute
+    ) {
         this.currentUser = this.authService.currentUserValue;
     }
 
     ngOnInit(): void {
-        this.gamesService.joinRoom("room1", function() {});
-        // this.gamesService.getMessages().subscribe((message: string) => {
-        //     this.messages.push(message);
-        // });
+        this.route.params.subscribe(params => {
+            this.gameId = params["id"];
+            this.gamesService.joinRoom(this.gameId, this.currentUser);
+            this.gamesService.getRoomGameUsers(this.gameId).subscribe(players => {
+                this.players = players;
+            });
+        });
     }
 
     ngOnDestroy(): void {
-        // this.gameSub.unsubscribe();
-    }
-
-    backToDashboard(event) {
-        event.preventDefault();
-        this.gamesService.leaveRoom("room1", this.currentUser.name);
-        this.router.navigate(["/games-dashboard"]);
+        console.log(`ngOnDestroy`);
+        this.gamesService.leaveRoom(this.gameId, this.currentUser);
     }
 }

@@ -1,9 +1,10 @@
 <p>games-dashboard works!</p>
 <p><a (click)="sendMessage('hello world')">SEND MESSAGE</a></p>
-<p><a routerLink="/games/1">Game 1</a></p>
 
 <ul>
-    <li *ngFor="let message of messages">{{ message }}</li>
+    <li *ngFor="let room of rooms">
+        <a href="#" routerLink="/games/{{ room.id }}">{{ room.name }}</a>
+    </li>
 </ul>
 
-<p><a href="#" (click)="createRoom('room1', $event)">Create Room</a></p>
+<p><a href="#" (click)="createRoom('roomName', $event)">Create Room</a></p>

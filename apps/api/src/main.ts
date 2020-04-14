@@ -1,4 +1,5 @@
 import * as express from "express";
+import { Socket } from "socket.io";
 
 const config = require("./app/common/config/env.config.js");
 const app = express();
@@ -42,13 +43,49 @@ const server = app.listen(port, () => {
 });
 server.on("error", console.error);
 
+// Game logic
+
+export class Room {
+    id: string;
+    name: string;
+    gameUsersData: GameUsersData[];
+}
+export class GameUsersData {
+    gameUser: GameUser;
+    userSocket: Socket;
+}
+
+export class GameUser {
+    accessToken: string;
+    userId: string;
+    email: string;
+    name: string;
+}
+
 const rooms = {};
-const joinRoom = (socket, room) => {
-    room.sockets.push(socket);
+const joinRoom = (socket: Socket, room: Room, gameUser: GameUser) => {
+    // room.gameUsersData.push({ gameUser: gameUser, userSocket: socket });
+    room.gameUsersData.push({ gameUser: gameUser, userSocket: null });
     socket.join(room.id, () => {
-        // store the room id in the socket for future use
-        socket.roomId = room.id;
-        console.log(socket.id, "Joined", room.id);
+        console.log(gameUser.name, "joined", room.id);
+    });
+};
+const leaveRoom = (socket: Socket, room: Room, gameUser: GameUser) => {
+    // const removedUser = room.gameUsersData.filter(currGameUser => currGameUser.gameUser.userId !== gameUser.userId);
+    const removedUserIndex = room.gameUsersData
+        .map(function(currGameUser) {
+            return currGameUser.gameUser.userId;
+        })
+        .indexOf(gameUser.userId);
+    rooms[room.id].gameUsersData.splice(removedUserIndex, 1);
+
+    socket.leave(room.id, () => {
+        console.log(gameUser.name, "left", room.id);
+    });
+};
+const getRoomUserNames = (gameUsersData: GameUsersData[]) => {
+    return gameUsersData.forEach(gameUsersData => {
+        return gameUsersData.gameUser.name;
     });
 };
 const getRoomNames = () => {
@@ -106,7 +143,7 @@ const getRoomNames = () => {
 const io = require(`socket.io`)(server);
 // Socket IO stuff
 io.on(`connection`, function(socket) {
-    socket.id = uuid();
+    // socket.id = uuid();
     console.log("a user connected");
 
     /**
@@ -124,25 +161,42 @@ io.on(`connection`, function(socket) {
         }
     });
 
-    socket.on("joinRoom", roomId => {
-        const room = rooms[roomId];
-        joinRoom(socket, room);
-        // callback();
+    socket.on("joinRoom", (roomId, userId) => {
+        const room: Room = rooms[roomId];
+        const gameUsersNames = [];
+        joinRoom(socket, room, userId);
+        room.gameUsersData.forEach(gameUserData => {
+            gameUsersNames.push(gameUserData.gameUser.name);
+        });
+        io.emit("getRoomGameUsers", gameUsersNames);
+    });
+    socket.on("leaveRoom", (roomId, userId) => {
+        const room: Room = rooms[roomId];
+        const gameUsersNames = [];
+        leaveRoom(socket, room, userId);
+        room.gameUsersData.forEach(gameUserData => {
+            gameUsersNames.push(gameUserData.gameUser.name);
+        });
+        io.emit("getRoomGameUsers", gameUsersNames);
     });
     socket.on("getRoomNames", () => {
         io.emit("getRoomNames", getRoomNames());
     });
+    socket.on("getRoomGameUsers", roomId => {
+        const room: Room = rooms[roomId];
+        const gameUsersNames = room.gameUsersData.forEach(gameUserData => {
+            return gameUserData.gameUser.name;
+        });
+        io.emit("getRoomGameUsers", gameUsersNames);
+    });
     socket.on("createRoom", roomName => {
-        const room = {
+        const room: Room = {
             id: uuid(), // generate a unique id for the new room, that way we don't need to deal with duplicates.
             name: roomName,
-            sockets: [],
+            gameUsersData: [],
         };
         rooms[room.id] = room;
         io.emit("getRoomNames", getRoomNames());
-        // have the socket join the room they've just created.
-        joinRoom(socket, room);
-        // callback();
     });
 
     socket.on(`disconnect`, function() {});
