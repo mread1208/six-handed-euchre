@@ -26,6 +26,7 @@ export class GamesService {
     public getRooms = () => {
         return Observable.create(observer => {
             this.socket.on("getRoomNames", rooms => {
+                console.log(rooms);
                 observer.next(rooms);
             });
         });
@@ -43,6 +44,9 @@ export class GamesService {
 
     public joinRoom = (room, gameUser) => {
         this.socket.emit("joinRoom", room, gameUser);
+    };
+    public joinGamesDashboard = () => {
+        this.socket.emit("joinGamesDashboard");
     };
     public leaveRoom = (room, gameUser) => {
         this.socket.emit("leaveRoom", room, gameUser);

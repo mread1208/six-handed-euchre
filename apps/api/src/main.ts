@@ -62,7 +62,8 @@ export class GameUser {
     name: string;
 }
 
-const rooms = {};
+const rooms: Room[] = [];
+
 const joinRoom = (socket: Socket, room: Room, gameUser: GameUser) => {
     // room.gameUsersData.push({ gameUser: gameUser, userSocket: socket });
     room.gameUsersData.push({ gameUser: gameUser, userSocket: null });
@@ -71,13 +72,21 @@ const joinRoom = (socket: Socket, room: Room, gameUser: GameUser) => {
     });
 };
 const leaveRoom = (socket: Socket, room: Room, gameUser: GameUser) => {
-    // const removedUser = room.gameUsersData.filter(currGameUser => currGameUser.gameUser.userId !== gameUser.userId);
+    // Get the index of the room we need to update
+    const roomUpdateIndex = rooms
+        .map(function(currRoom) {
+            return currRoom.id;
+        })
+        .indexOf(room.id);
+    // Get the index of the user we need to remove
     const removedUserIndex = room.gameUsersData
         .map(function(currGameUser) {
             return currGameUser.gameUser.userId;
         })
         .indexOf(gameUser.userId);
-    rooms[room.id].gameUsersData.splice(removedUserIndex, 1);
+    // Remove that index from the global rooms gameUsersData array
+    const roomToRemoveUser = rooms.find(findRoom => room.id === findRoom.id);
+    rooms[roomUpdateIndex].gameUsersData.splice(removedUserIndex, 1);
 
     socket.leave(room.id, () => {
         console.log(gameUser.name, "left", room.id);
@@ -90,11 +99,9 @@ const getRoomUserNames = (gameUsersData: GameUsersData[]) => {
 };
 const getRoomNames = () => {
     const roomNames = [];
-    for (const id in rooms) {
-        const { name } = rooms[id];
-        const room = { name, id };
-        roomNames.push(room);
-    }
+    rooms.forEach(room => {
+        roomNames.push({ id: room.id, name: room.name });
+    });
     return roomNames;
 };
 // const leaveRooms = socket => {
@@ -149,45 +156,20 @@ io.on(`connection`, function(socket) {
     /**
      * Lets us know that players have joined a room and are waiting in the waiting room.
      */
-    socket.on("ready", () => {
-        console.log(socket.id, "is ready!");
-        const room = rooms[socket.roomId];
-        // when we have two players... START THE GAME!
-        if (room.sockets.length == 2) {
-            // tell each player to start the game.
-            for (const client of room.sockets) {
-                client.emit("initGame");
-            }
-        }
-    });
+    // socket.on("ready", () => {
+    //     console.log(socket.id, "is ready!");
+    //     const room = rooms[socket.roomId];
+    //     // when we have two players... START THE GAME!
+    //     if (room.sockets.length == 2) {
+    //         // tell each player to start the game.
+    //         for (const client of room.sockets) {
+    //             client.emit("initGame");
+    //         }
+    //     }
+    // });
 
-    socket.on("joinRoom", (roomId, userId) => {
-        const room: Room = rooms[roomId];
-        const gameUsersNames = [];
-        joinRoom(socket, room, userId);
-        room.gameUsersData.forEach(gameUserData => {
-            gameUsersNames.push(gameUserData.gameUser.name);
-        });
-        io.emit("getRoomGameUsers", gameUsersNames);
-    });
-    socket.on("leaveRoom", (roomId, userId) => {
-        const room: Room = rooms[roomId];
-        const gameUsersNames = [];
-        leaveRoom(socket, room, userId);
-        room.gameUsersData.forEach(gameUserData => {
-            gameUsersNames.push(gameUserData.gameUser.name);
-        });
-        io.emit("getRoomGameUsers", gameUsersNames);
-    });
-    socket.on("getRoomNames", () => {
+    socket.on("joinGamesDashboard", () => {
         io.emit("getRoomNames", getRoomNames());
-    });
-    socket.on("getRoomGameUsers", roomId => {
-        const room: Room = rooms[roomId];
-        const gameUsersNames = room.gameUsersData.forEach(gameUserData => {
-            return gameUserData.gameUser.name;
-        });
-        io.emit("getRoomGameUsers", gameUsersNames);
     });
     socket.on("createRoom", roomName => {
         const room: Room = {
@@ -195,8 +177,37 @@ io.on(`connection`, function(socket) {
             name: roomName,
             gameUsersData: [],
         };
-        rooms[room.id] = room;
+        rooms.push(room);
         io.emit("getRoomNames", getRoomNames());
+    });
+
+    socket.on("joinRoom", (roomId, userId) => {
+        const roomToJoin = rooms.find(room => room.id === roomId);
+        const gameUsersNames = [];
+        joinRoom(socket, roomToJoin, userId);
+        roomToJoin.gameUsersData.forEach(gameUserData => {
+            gameUsersNames.push(gameUserData.gameUser.name);
+        });
+        io.to(roomId).emit("getRoomGameUsers", gameUsersNames);
+    });
+    socket.on("leaveRoom", (roomId, userId) => {
+        const roomToJoin = rooms.find(room => room.id === roomId);
+        const gameUsersNames = [];
+        leaveRoom(socket, roomToJoin, userId);
+        roomToJoin.gameUsersData.forEach(gameUserData => {
+            gameUsersNames.push(gameUserData.gameUser.name);
+        });
+        io.to(roomId).emit("getRoomGameUsers", gameUsersNames);
+    });
+    socket.on("getRoomNames", () => {
+        io.emit("getRoomNames", getRoomNames());
+    });
+    socket.on("getRoomGameUsers", roomId => {
+        const roomToJoin = rooms.find(room => room.id === roomId);
+        const gameUsersNames = roomToJoin.gameUsersData.forEach(gameUserData => {
+            return gameUserData.gameUser.name;
+        });
+        io.to(roomId).emit("getRoomGameUsers", gameUsersNames);
     });
 
     socket.on(`disconnect`, function() {});

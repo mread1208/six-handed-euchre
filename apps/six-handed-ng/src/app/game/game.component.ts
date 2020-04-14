@@ -36,7 +36,6 @@ export class GameComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        console.log(`ngOnDestroy`);
         this.gamesService.leaveRoom(this.gameId, this.currentUser);
     }
 }

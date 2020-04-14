@@ -14,6 +14,7 @@ export class GamesDashboardComponent implements OnInit {
     constructor(private gamesService: GamesService) {}
 
     ngOnInit(): void {
+        this.gamesService.joinGamesDashboard();
         this.gamesService.getRooms().subscribe(rooms => {
             this.rooms = rooms;
         });
