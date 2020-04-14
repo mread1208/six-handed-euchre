@@ -1,0 +1,26 @@
+{
+    "/api": {
+        "target": "http://localhost:3333",
+        "secure": false
+    },
+    "/api/auth": {
+        "target": "http://localhost:3333",
+        "secure": false
+    },
+    "/api/sign-up": {
+        "target": "http://localhost:3333",
+        "secure": false
+    },
+    "/api/games": {
+        "target": "http://localhost:3333",
+        "secure": false
+    },
+    "/api/games/create": {
+        "target": "http://localhost:3333",
+        "secure": false
+    },
+    "/api/games/:id": {
+        "target": "http://localhost:3333",
+        "secure": false
+    }
+}
