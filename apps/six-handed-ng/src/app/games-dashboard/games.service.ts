@@ -25,17 +25,17 @@ export class GamesService {
     };
     public getRooms = () => {
         return Observable.create(observer => {
-            this.socket.on("chat_message", message => {
-                observer.next(message);
+            this.socket.on("getRoomNames", room => {
+                observer.next(room);
             });
         });
     };
-    public getGames = () => {
-        return this.http.get<Game>("/api/games/");
-    };
+    // public getGames = () => {
+    //     return this.http.get<Game>("/api/games/");
+    // };
 
-    public joinRoom = (room, name) => {
-        this.socket.emit("joinRoom", room, name);
+    public joinRoom = (room, callback) => {
+        this.socket.emit("joinRoom", room, callback);
     };
     public leaveRoom = (room, name) => {
         this.socket.emit("leave_room", room, name);

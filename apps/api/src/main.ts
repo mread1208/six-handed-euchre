@@ -44,12 +44,21 @@ server.on("error", console.error);
 
 const rooms = {};
 const joinRoom = (socket, room) => {
-    // room.sockets.push(socket);
-    // socket.join(room.id, () => {
-    //     // store the room id in the socket for future use
-    //     socket.roomId = room.id;
-    //     console.log(socket.id, "Joined", room.id);
-    // });
+    room.sockets.push(socket);
+    socket.join(room.id, () => {
+        // store the room id in the socket for future use
+        socket.roomId = room.id;
+        console.log(socket.id, "Joined", room.id);
+    });
+};
+const getRoomNames = () => {
+    const roomNames = [];
+    for (const id in rooms) {
+        const { name } = rooms[id];
+        const room = { name, id };
+        roomNames.push(room);
+    }
+    return roomNames;
 };
 // const leaveRooms = socket => {
 //     const roomsToDelete = [];
@@ -115,31 +124,25 @@ io.on(`connection`, function(socket) {
         }
     });
 
-    socket.on("joinRoom", (roomId, callback) => {
+    socket.on("joinRoom", roomId => {
         const room = rooms[roomId];
         joinRoom(socket, room);
-        callback();
+        // callback();
     });
-    socket.on("getRoomNames", (data, callback) => {
-        const roomNames = [];
-        for (const id in rooms) {
-            const { name } = rooms[id];
-            const room = { name, id };
-            roomNames.push(room);
-        }
-
-        callback(roomNames);
+    socket.on("getRoomNames", () => {
+        io.emit("getRoomNames", getRoomNames());
     });
-    socket.on("createRoom", (roomName, callback) => {
+    socket.on("createRoom", roomName => {
         const room = {
             id: uuid(), // generate a unique id for the new room, that way we don't need to deal with duplicates.
             name: roomName,
             sockets: [],
         };
         rooms[room.id] = room;
+        io.emit("getRoomNames", getRoomNames());
         // have the socket join the room they've just created.
         joinRoom(socket, room);
-        callback();
+        // callback();
     });
 
     socket.on(`disconnect`, function() {});

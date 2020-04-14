@@ -15,12 +15,11 @@ export class GamesDashboardComponent implements OnInit {
 
     ngOnInit(): void {
         this.gamesService.getRooms().subscribe(room => {
-            console.log(room);
-            this.messages.push(room);
+            this.games.push(room);
         });
-        this.gamesService.getGames().subscribe(game => {
-            this.games.push(game);
-        });
+        // this.gamesService.getGames().subscribe(game => {
+        //     this.games.push(game);
+        // });
     }
 
     createRoom(roomName, event) {

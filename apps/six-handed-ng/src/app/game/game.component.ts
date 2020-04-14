@@ -21,7 +21,7 @@ export class GameComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
-        this.gamesService.joinRoom("room1", this.currentUser.name);
+        this.gamesService.joinRoom("room1", function() {});
         // this.gamesService.getMessages().subscribe((message: string) => {
         //     this.messages.push(message);
         // });
