@@ -7,4 +7,9 @@
     </li>
 </ul>
 
-<p><a href="#" (click)="createRoom('roomName', $event)">Create Room</a></p>
+<form [formGroup]="createRoomForm" (ngSubmit)="createGame()">
+    <label for="gameName">Game Name</label>
+    <input type="text" formControlName="gameName" required />
+
+    <button>Create Game</button>
+</form>
