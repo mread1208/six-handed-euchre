@@ -44,66 +44,6 @@ const server = app.listen(port, () => {
 server.on("error", console.error);
 
 // Game logic
-
-export class Room {
-    id: string;
-    name: string;
-    gameUsersData: GameUsersData[];
-}
-export class GameUsersData {
-    gameUser: GameUser;
-    userSocket: Socket;
-}
-
-export class GameUser {
-    accessToken: string;
-    userId: string;
-    email: string;
-    name: string;
-}
-
-const rooms: Room[] = [];
-
-const joinRoom = (socket: Socket, room: Room, gameUser: GameUser) => {
-    room.gameUsersData.push({ gameUser: gameUser, userSocket: socket });
-    socket.join(room.id, () => {
-        console.log(gameUser.name, "joined", room.id);
-    });
-};
-const leaveRoom = (socket: Socket, room: Room, gameUser: GameUser) => {
-    // Get the index of the room we need to update
-    const roomUpdateIndex = rooms
-        .map(function(currRoom) {
-            return currRoom.id;
-        })
-        .indexOf(room.id);
-    // Get the index of the user we need to remove
-    const removedUserIndex = room.gameUsersData
-        .map(function(currGameUser) {
-            return currGameUser.gameUser.userId;
-        })
-        .indexOf(gameUser.userId);
-    // Remove that index from the global rooms gameUsersData array
-    rooms[roomUpdateIndex].gameUsersData.splice(removedUserIndex, 1);
-
-    socket.leave(room.id, () => {
-        console.log(gameUser.name, "left", room.id);
-    });
-};
-const getRoomUserNames = (gamesUsersData: GameUsersData[]) => {
-    const gameUsersNames = [];
-    gamesUsersData.forEach(gameUserData => {
-        gameUsersNames.push(gameUserData.gameUser.name);
-    });
-    return gameUsersNames;
-};
-const getRoomNames = () => {
-    const roomNames = [];
-    rooms.forEach(room => {
-        roomNames.push({ id: room.id, name: room.name });
-    });
-    return roomNames;
-};
 // const leaveRooms = socket => {
 //     const roomsToDelete = [];
 //     for (const id in rooms) {
@@ -148,11 +88,10 @@ const getRoomNames = () => {
 // };
 
 const io = require(`socket.io`)(server);
+const gamesNamespace = io.of("/games");
 // Socket IO stuff
 io.on(`connection`, function(socket) {
-    // socket.id = uuid();
-    console.log("a user connected");
-
+    console.log("a user connected to the main namespace");
     /**
      * Lets us know that players have joined a room and are waiting in the waiting room.
      */
@@ -167,48 +106,74 @@ io.on(`connection`, function(socket) {
     //         }
     //     }
     // });
+});
 
-    socket.on("setSocketId", data => {
-        console.log(data);
-        // io.emit("getRoomNames", getRoomNames());
+gamesNamespace.on(`connection`, function(socket) {
+    console.log("a user connected to the games namespace");
+
+    socket.on("setSocketUserData", data => {
+        socket.username = data.name;
+        socket.userId = data.userId;
     });
     socket.on("joinGamesDashboard", () => {
-        io.emit("getRoomNames", getRoomNames());
+        const currentGameRooms = Object.keys(io.of("/games").adapter.rooms).filter(room => room.startsWith("game_"));
+        gamesNamespace.emit("getRoomNames", currentGameRooms);
     });
-    socket.on("createRoom", roomName => {
-        const room: Room = {
-            id: uuid(), // generate a unique id for the new room, that way we don't need to deal with duplicates.
-            name: roomName,
-            gameUsersData: [],
-        };
-        rooms.push(room);
-        io.emit("getRoomNames", getRoomNames());
+    socket.on("createRoom", () => {
+        // Prefix all games with game_ so we can identify which sockets are games.
+        const newRoomId = `game_${uuid()}`;
+        gamesNamespace.emit("joinNewRoom", newRoomId);
     });
 
-    socket.on("joinRoom", (roomId, userId) => {
-        const roomToJoin = rooms.find(room => room.id === roomId);
-        joinRoom(socket, roomToJoin, userId);
-        // Gets a list of all clients in the room
-        io.in(roomId).clients((error, clients) => {
-            if (error) throw error;
-            console.log(clients);
+    socket.on("joinRoom", roomId => {
+        if (socket.username === undefined) {
+            gamesNamespace.to(roomId).emit("refreshSocketUserData");
+        }
+        socket.join(roomId, () => {
+            console.log(socket.username, "joined", roomId);
+            const currentGameRooms = Object.keys(io.of("/games").adapter.rooms).filter(room =>
+                room.startsWith("game_")
+            );
+            gamesNamespace.emit("getRoomNames", currentGameRooms);
         });
-        io.to(roomId).emit("getRoomGameUsers", getRoomUserNames(roomToJoin.gameUsersData));
+        // Gets a list of all clients in the room
+        gamesNamespace.in(roomId).clients((error, clients) => {
+            if (error) throw error;
+            const gameUsersNames = [];
+            clients.forEach(socketId => {
+                gameUsersNames.push(gamesNamespace.sockets[socketId].username);
+            });
+            gamesNamespace.to(roomId).emit("getRoomGameUsers", gameUsersNames);
+        });
     });
-    socket.on("leaveRoom", (roomId, userId) => {
-        const roomToJoin = rooms.find(room => room.id === roomId);
-        leaveRoom(socket, roomToJoin, userId);
-        io.to(roomId).emit("getRoomGameUsers", getRoomUserNames(roomToJoin.gameUsersData));
+    socket.on("leaveRoom", roomId => {
+        console.log(socket.username, "left", roomId);
+        socket.leave(roomId, () => {
+            const currentGameRooms = Object.keys(io.of("/games").adapter.rooms).filter(room =>
+                room.startsWith("game_")
+            );
+            gamesNamespace.emit("getRoomNames", currentGameRooms);
+        });
+        // Gets a list of all clients in the room
+        gamesNamespace.in(roomId).clients((error, clients) => {
+            if (error) throw error;
+            const gameUsersNames = [];
+            clients.forEach(socketId => {
+                gameUsersNames.push(gamesNamespace.sockets[socketId].username);
+            });
+            gamesNamespace.to(roomId).emit("getRoomGameUsers", gameUsersNames);
+        });
     });
     socket.on("getRoomNames", () => {
-        io.emit("getRoomNames", getRoomNames());
-    });
-    socket.on("getRoomGameUsers", roomId => {
-        const roomToJoin = rooms.find(room => room.id === roomId);
-        io.to(roomId).emit("getRoomGameUsers", getRoomUserNames(roomToJoin.gameUsersData));
+        const currentGameRooms = Object.keys(io.of("/games").adapter.rooms).filter(room => room.startsWith("game_"));
+        io.emit("getRoomNames", currentGameRooms);
     });
 
-    socket.on(`disconnect`, function() {
-        // console.log(socket.id);
+    socket.on(`disconnecting`, function() {
+        const self = this;
+        const dcRooms = Object.keys(self.rooms);
+        dcRooms.forEach(function(dcRoom) {
+            self.to(dcRoom).emit("user left", self.id + "left");
+        });
     });
 });

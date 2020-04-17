@@ -1,4 +1,5 @@
 import { Component, OnInit } from "@angular/core";
+import { Router, ActivatedRoute } from "@angular/router";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 
 import { GamesService } from "./games.service";
@@ -20,7 +21,9 @@ export class GamesDashboardComponent implements OnInit {
     constructor(
         private gamesService: GamesService,
         private authService: AuthService,
-        private formBuilder: FormBuilder
+        private formBuilder: FormBuilder,
+        public router: Router,
+        private route: ActivatedRoute
     ) {
         this.createRoomForm = formBuilder.group({
             gameName: ["", Validators.compose([Validators.required])],
@@ -29,7 +32,8 @@ export class GamesDashboardComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        this.gamesService.setSocketId(this.currentUser);
+        // Set the socketUserData again just in case the user disconnects or refreshes the page
+        this.gamesService.setSocketUserData(this.currentUser);
         this.gamesService.joinGamesDashboard();
         this.gamesService.getRooms().subscribe(rooms => {
             this.rooms = rooms;
@@ -47,5 +51,8 @@ export class GamesDashboardComponent implements OnInit {
         const gameName = this.createRoomForm.get("gameName").value;
         this.gamesService.createRoom(gameName);
         this.createRoomForm.get("gameName").setValue("");
+        this.gamesService.joinNewRoom().subscribe(newRoomId => {
+            this.router.navigate([`/games/${newRoomId}`]);
+        });
     }
 }

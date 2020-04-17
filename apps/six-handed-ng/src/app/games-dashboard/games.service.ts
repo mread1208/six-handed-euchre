@@ -11,46 +11,59 @@ import { Game } from "../models/Game";
 export class GamesService {
     private url = "http://localhost:3333";
     private socket;
+    private gameSocket;
 
     constructor(private http: HttpClient) {
         this.socket = io(this.url);
+        this.gameSocket = io(`${this.url}/games`);
     }
 
-    public setSocketId(user) {
-        this.socket.emit("setSocketId", user);
+    public setSocketUserData(user) {
+        this.gameSocket.emit("setSocketUserData", user);
+    }
+    public refreshSocketUserData() {
+        return Observable.create(observer => {
+            this.gameSocket.on("refreshSocketUserData", () => {
+                observer.next();
+            });
+        });
     }
     public sendMessage(message) {
-        this.socket.emit("chat_message", message);
+        this.gameSocket.emit("chat_message", message);
     }
 
     public createRoom = roomName => {
-        this.socket.emit("createRoom", roomName);
+        this.gameSocket.emit("createRoom", roomName);
+    };
+    public joinNewRoom = () => {
+        return Observable.create(observer => {
+            this.gameSocket.on("joinNewRoom", roomId => {
+                observer.next(roomId);
+            });
+        });
     };
     public getRooms = () => {
         return Observable.create(observer => {
-            this.socket.on("getRoomNames", rooms => {
+            this.gameSocket.on("getRoomNames", rooms => {
                 observer.next(rooms);
             });
         });
     };
     public getRoomGameUsers = room => {
         return Observable.create(observer => {
-            this.socket.on("getRoomGameUsers", gameUsers => {
+            this.gameSocket.on("getRoomGameUsers", gameUsers => {
                 observer.next(gameUsers);
             });
         });
     };
-    // public getGames = () => {
-    //     return this.http.get<Game>("/api/games/");
-    // };
 
-    public joinRoom = (room, gameUser) => {
-        this.socket.emit("joinRoom", room, gameUser);
+    public joinRoom = room => {
+        this.gameSocket.emit("joinRoom", room);
     };
     public joinGamesDashboard = () => {
-        this.socket.emit("joinGamesDashboard");
+        this.gameSocket.emit("joinGamesDashboard");
     };
     public leaveRoom = (room, gameUser) => {
-        this.socket.emit("leaveRoom", room, gameUser);
+        this.gameSocket.emit("leaveRoom", room, gameUser);
     };
 }
