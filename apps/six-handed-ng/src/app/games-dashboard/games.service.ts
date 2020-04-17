@@ -16,6 +16,9 @@ export class GamesService {
         this.socket = io(this.url);
     }
 
+    public setSocketId(user) {
+        this.socket.emit("setSocketId", user);
+    }
     public sendMessage(message) {
         this.socket.emit("chat_message", message);
     }
@@ -26,7 +29,6 @@ export class GamesService {
     public getRooms = () => {
         return Observable.create(observer => {
             this.socket.on("getRoomNames", rooms => {
-                console.log(rooms);
                 observer.next(rooms);
             });
         });

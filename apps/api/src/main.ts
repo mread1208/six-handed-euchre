@@ -65,8 +65,7 @@ export class GameUser {
 const rooms: Room[] = [];
 
 const joinRoom = (socket: Socket, room: Room, gameUser: GameUser) => {
-    // room.gameUsersData.push({ gameUser: gameUser, userSocket: socket });
-    room.gameUsersData.push({ gameUser: gameUser, userSocket: null });
+    room.gameUsersData.push({ gameUser: gameUser, userSocket: socket });
     socket.join(room.id, () => {
         console.log(gameUser.name, "joined", room.id);
     });
@@ -85,17 +84,18 @@ const leaveRoom = (socket: Socket, room: Room, gameUser: GameUser) => {
         })
         .indexOf(gameUser.userId);
     // Remove that index from the global rooms gameUsersData array
-    const roomToRemoveUser = rooms.find(findRoom => room.id === findRoom.id);
     rooms[roomUpdateIndex].gameUsersData.splice(removedUserIndex, 1);
 
     socket.leave(room.id, () => {
         console.log(gameUser.name, "left", room.id);
     });
 };
-const getRoomUserNames = (gameUsersData: GameUsersData[]) => {
-    return gameUsersData.forEach(gameUsersData => {
-        return gameUsersData.gameUser.name;
+const getRoomUserNames = (gamesUsersData: GameUsersData[]) => {
+    const gameUsersNames = [];
+    gamesUsersData.forEach(gameUserData => {
+        gameUsersNames.push(gameUserData.gameUser.name);
     });
+    return gameUsersNames;
 };
 const getRoomNames = () => {
     const roomNames = [];
@@ -168,6 +168,10 @@ io.on(`connection`, function(socket) {
     //     }
     // });
 
+    socket.on("setSocketId", data => {
+        console.log(data);
+        // io.emit("getRoomNames", getRoomNames());
+    });
     socket.on("joinGamesDashboard", () => {
         io.emit("getRoomNames", getRoomNames());
     });
@@ -183,32 +187,28 @@ io.on(`connection`, function(socket) {
 
     socket.on("joinRoom", (roomId, userId) => {
         const roomToJoin = rooms.find(room => room.id === roomId);
-        const gameUsersNames = [];
         joinRoom(socket, roomToJoin, userId);
-        roomToJoin.gameUsersData.forEach(gameUserData => {
-            gameUsersNames.push(gameUserData.gameUser.name);
+        // Gets a list of all clients in the room
+        io.in(roomId).clients((error, clients) => {
+            if (error) throw error;
+            console.log(clients);
         });
-        io.to(roomId).emit("getRoomGameUsers", gameUsersNames);
+        io.to(roomId).emit("getRoomGameUsers", getRoomUserNames(roomToJoin.gameUsersData));
     });
     socket.on("leaveRoom", (roomId, userId) => {
         const roomToJoin = rooms.find(room => room.id === roomId);
-        const gameUsersNames = [];
         leaveRoom(socket, roomToJoin, userId);
-        roomToJoin.gameUsersData.forEach(gameUserData => {
-            gameUsersNames.push(gameUserData.gameUser.name);
-        });
-        io.to(roomId).emit("getRoomGameUsers", gameUsersNames);
+        io.to(roomId).emit("getRoomGameUsers", getRoomUserNames(roomToJoin.gameUsersData));
     });
     socket.on("getRoomNames", () => {
         io.emit("getRoomNames", getRoomNames());
     });
     socket.on("getRoomGameUsers", roomId => {
         const roomToJoin = rooms.find(room => room.id === roomId);
-        const gameUsersNames = roomToJoin.gameUsersData.forEach(gameUserData => {
-            return gameUserData.gameUser.name;
-        });
-        io.to(roomId).emit("getRoomGameUsers", gameUsersNames);
+        io.to(roomId).emit("getRoomGameUsers", getRoomUserNames(roomToJoin.gameUsersData));
     });
 
-    socket.on(`disconnect`, function() {});
+    socket.on(`disconnect`, function() {
+        // console.log(socket.id);
+    });
 });
