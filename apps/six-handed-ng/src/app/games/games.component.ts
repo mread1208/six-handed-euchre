@@ -3,16 +3,16 @@ import { Router, ActivatedRoute } from "@angular/router";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 
 import { GamesService } from "./games.service";
-import { AuthService } from "./../auth/auth.service";
+import { AuthService } from "../auth/auth.service";
 import { User } from "../models/User";
 
 import { Game } from "../models/Game";
 @Component({
-    selector: "six-handed-euchre-games-dashboard",
-    templateUrl: "./games-dashboard.component.html",
-    styleUrls: ["./games-dashboard.component.css"],
+    selector: "six-handed-euchre-games",
+    templateUrl: "./games.component.html",
+    styleUrls: ["./games.component.css"],
 })
-export class GamesDashboardComponent implements OnInit {
+export class GamesComponent implements OnInit {
     messages: string[] = [];
     rooms: Game[] = [];
     createRoomForm: FormGroup;

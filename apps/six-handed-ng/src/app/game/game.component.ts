@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from "@angular/core";
 import { Router, ActivatedRoute } from "@angular/router";
 import { Subscription } from "rxjs";
 
-import { GamesService } from "./../games-dashboard/games.service";
+import { GamesService } from "../games/games.service";
 import { AuthService } from "./../auth/auth.service";
 import { User } from "../models/User";
 import { GameData } from "../models/GameData";
