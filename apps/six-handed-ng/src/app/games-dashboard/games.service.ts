@@ -66,4 +66,18 @@ export class GamesService {
     public leaveRoom = (room, gameUser) => {
         this.gameSocket.emit("leaveRoom", room, gameUser);
     };
+
+    public takeSeat(gameId: string, seatNumber: number) {
+        this.gameSocket.emit("takeSeat", gameId, seatNumber);
+    }
+    public startGame(gameId: string) {
+        this.gameSocket.emit("startGame", gameId);
+    }
+    public getGameData = () => {
+        return Observable.create(observer => {
+            this.gameSocket.on("getGameData", gameData => {
+                observer.next(gameData);
+            });
+        });
+    };
 }

@@ -5,6 +5,7 @@ import { Subscription } from "rxjs";
 import { GamesService } from "./../games-dashboard/games.service";
 import { AuthService } from "./../auth/auth.service";
 import { User } from "../models/User";
+import { GameData } from "../models/GameData";
 
 @Component({
     selector: "six-handed-euchre-game",
@@ -12,9 +13,9 @@ import { User } from "../models/User";
     styleUrls: ["./game.component.css"],
 })
 export class GameComponent implements OnInit, OnDestroy {
-    players: string[] = [];
-    public currentUser: User;
-    private gameId: string;
+    private currentUser: User;
+    public players: string[] = [];
+    public gameData: GameData;
 
     constructor(
         private gamesService: GamesService,
@@ -27,20 +28,34 @@ export class GameComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.route.params.subscribe(params => {
-            this.gameId = params["id"];
+            this.gameData = new GameData(params["id"], 2, []);
             this.gamesService.setSocketUserData(this.currentUser);
-            this.gamesService.joinRoom(this.gameId);
-            this.gamesService.getRoomGameUsers(this.gameId).subscribe(players => {
+            this.gamesService.joinRoom(this.gameData.gameId);
+            this.gamesService.getRoomGameUsers(this.gameData.gameId).subscribe(players => {
                 this.players = players;
             });
+            this.gamesService.getGameData().subscribe(gameData => {
+                this.gameData = gameData;
+            });
+
             // If the API doesn't properly set user data on the socker, resend it!
             this.gamesService.refreshSocketUserData().subscribe(() => {
-                this.gamesService.joinRoom(this.gameId);
+                this.gamesService.joinRoom(this.gameData.gameId);
             });
         });
     }
 
     ngOnDestroy(): void {
-        this.gamesService.leaveRoom(this.gameId, this.currentUser);
+        this.gamesService.leaveRoom(this.gameData.gameId, this.currentUser);
+    }
+
+    public takeSeat(event, seatNumber: number) {
+        event.preventDefault();
+        this.gamesService.takeSeat(this.gameData.gameId, seatNumber);
+    }
+
+    public startGame(event) {
+        event.preventDefault();
+        this.gamesService.startGame(this.gameData.gameId);
     }
 }
