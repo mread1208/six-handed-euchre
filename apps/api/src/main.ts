@@ -180,7 +180,6 @@ gamesNamespace.on(`connection`, function(socket) {
             );
             // Send game data on joining of room
             let gameData = games.find(game => game.gameId === roomId);
-            console.log(gameData);
             // If game doesn't exist, let's add to the array.
             if (gameData === undefined) {
                 gameData = createNewRoom(roomId);
