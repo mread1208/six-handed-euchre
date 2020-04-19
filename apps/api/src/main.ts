@@ -72,7 +72,7 @@ const takeSeat = function(roomId: string, userId: string, seatNumber: number): G
     // Check to see if user is already in a seat
     if (games[gameIndex].seats.find(seat => seat.userId === userId)) {
         // Throw error, "User already in seat {{i}}!"
-        return;
+        return games[gameIndex];
     }
 
     // Create new seat with user info, add to index.
