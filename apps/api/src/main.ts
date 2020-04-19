@@ -48,60 +48,66 @@ export class GameData {
     gameId: string;
     numberOfSeats: number;
     seats: Seat[];
+    startGame: boolean;
 
-    constructor(gameId, numberOfSeats, seats) {
+    constructor(gameId, numberOfSeats, seats, startGame) {
         this.gameId = gameId;
         this.numberOfSeats = numberOfSeats;
         this.seats = seats;
+        this.startGame = startGame;
     }
 }
 export class Seat {
     seatNumber: number;
     userId: string;
+    userName: string;
 
-    constructor(seatNumber, userId) {
+    constructor(seatNumber, userId, userName) {
         this.seatNumber = seatNumber;
         this.userId = userId;
+        this.userName = userName;
     }
 }
 const games: GameData[] = [];
 
-const takeSeat = function(roomId: string, userId: string, seatNumber: number): GameData {
+const createNewRoom = function(roomId: string): GameData {
+    const seat1 = new Seat(1, "", "");
+    const seat2 = new Seat(2, "", "");
+    const createGame = new GameData(roomId, 2, [seat1, seat2], false);
+    games.push(createGame);
+
+    return createGame;
+};
+const takeSeat = function(roomId: string, userId: string, userName: string, seatNumber: number): GameData {
     const gameIndex = games.findIndex(game => game.gameId === roomId);
     const seatIndex = games[gameIndex].seats.findIndex(seat => seat.seatNumber === seatNumber);
     // Check to see if user is already in a seat
     if (games[gameIndex].seats.find(seat => seat.userId === userId)) {
+        console.error("User already in a seat!");
         // Throw error, "User already in seat {{i}}!"
         return games[gameIndex];
     }
-
     // Create new seat with user info, add to index.
     games[gameIndex].seats[seatIndex].userId = userId;
-    console.log(games[gameIndex]);
+    games[gameIndex].seats[seatIndex].userName = userName;
+    // Can the game start?
+    const numberOfTakenSeats = games[gameIndex].seats.filter(seat => seat.userId !== "").length;
+    games[gameIndex].startGame = games[gameIndex].seats.length === numberOfTakenSeats;
+
+    return games[gameIndex];
+};
+const leaveSeat = function(roomId: string, userId: string): GameData {
+    const gameIndex = games.findIndex(game => game.gameId === roomId);
+    const seatIndex = games[gameIndex].seats.findIndex(seat => seat.userId === userId);
+    // Check to see if user is in a seat
+    if (seatIndex >= 0) {
+        // Remove the user from the seat
+        games[gameIndex].seats[seatIndex].userId = "";
+        games[gameIndex].seats[seatIndex].userName = "";
+    }
     return games[gameIndex];
 };
 
-// const leaveRooms = socket => {
-//     const roomsToDelete = [];
-//     for (const id in rooms) {
-//         const room = rooms[id];
-//         // check to see if the socket is in the current room
-//         if (room.sockets.includes(socket)) {
-//             socket.leave(id);
-//             // remove the socket from the room object
-//             room.sockets = room.sockets.filter(item => item !== socket);
-//         }
-//         // Prepare to delete any rooms that are now empty
-//         if (room.sockets.length == 0) {
-//             roomsToDelete.push(room);
-//         }
-//     }
-
-//     // Delete all the empty rooms that we found earlier
-//     for (const room of roomsToDelete) {
-//         delete rooms[room.id];
-//     }
-// };
 // const checkScore = (room, sendMessage = false) => {
 //     let winner = null;
 //     for (const client of room.sockets) {
@@ -159,10 +165,7 @@ gamesNamespace.on(`connection`, function(socket) {
     socket.on("createRoom", () => {
         // Prefix all games with game_ so we can identify which sockets are games.
         const newRoomId = `game_${uuid()}`;
-        const seat1 = new Seat(1, "");
-        const seat2 = new Seat(2, "");
-        const createGame = new GameData(newRoomId, 2, [seat1, seat2]);
-        games.push(createGame);
+        createNewRoom(newRoomId);
         gamesNamespace.emit("joinNewRoom", newRoomId);
     });
 
@@ -176,7 +179,12 @@ gamesNamespace.on(`connection`, function(socket) {
                 room.startsWith("game_")
             );
             // Send game data on joining of room
-            const gameData = games.find(game => game.gameId === roomId);
+            let gameData = games.find(game => game.gameId === roomId);
+            console.log(gameData);
+            // If game doesn't exist, let's add to the array.
+            if (gameData === undefined) {
+                gameData = createNewRoom(roomId);
+            }
             gamesNamespace.emit("getGameData", gameData);
             // Why are we sending room names when we join?
             gamesNamespace.emit("getRoomNames", currentGameRooms);
@@ -208,6 +216,10 @@ gamesNamespace.on(`connection`, function(socket) {
             });
             gamesNamespace.to(roomId).emit("getRoomGameUsers", gameUsersNames);
         });
+        // Leave your seat if you're in one.
+        const gameData: GameData = leaveSeat(roomId, socket.userId);
+        // const currentGameRooms = Object.keys(io.of("/games").adapter.rooms).filter(room => room.startsWith("game_"));
+        gamesNamespace.emit("getGameData", gameData);
     });
     socket.on("getRoomNames", () => {
         const currentGameRooms = Object.keys(io.of("/games").adapter.rooms).filter(room => room.startsWith("game_"));
@@ -215,7 +227,7 @@ gamesNamespace.on(`connection`, function(socket) {
     });
 
     socket.on("takeSeat", (roomId, seatNumber) => {
-        const gameData: GameData = takeSeat(roomId, socket.userId, seatNumber);
+        const gameData: GameData = takeSeat(roomId, socket.userId, socket.username, seatNumber);
         // const currentGameRooms = Object.keys(io.of("/games").adapter.rooms).filter(room => room.startsWith("game_"));
         gamesNamespace.emit("getGameData", gameData);
     });

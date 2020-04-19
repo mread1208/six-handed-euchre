@@ -6,12 +6,12 @@
 
 <div class="seats">
     <p *ngFor="let seat of gameData.seats">
-        <ng-container *ngIf="seat.userId"> Seat {{ seat.seatNumber }} - {{ seat.userId }} </ng-container>
-        <ng-container *ngIf="!seat.userId">
+        <ng-container *ngIf="seat.userName"> Seat {{ seat.seatNumber }} - {{ seat.userName }} </ng-container>
+        <ng-container *ngIf="!seat.userName">
             <a href="#" (click)="takeSeat($event, seat.seatNumber)"> Join Seat {{ seat.seatNumber }} </a>
         </ng-container>
     </p>
 </div>
 
-<p><a href="#" (click)="startGame($event)">Start Game</a></p>
+<p *ngIf="gameData.startGame"><a href="#" (click)="startGame($event)">Start Game</a></p>
 <p><a routerLink="/games-dashboard">Back to games dashboard</a></p>

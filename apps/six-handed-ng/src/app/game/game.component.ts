@@ -28,7 +28,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.route.params.subscribe(params => {
-            this.gameData = new GameData(params["id"], 2, []);
+            this.gameData = new GameData(params["id"], 2, [], false);
             this.gamesService.setSocketUserData(this.currentUser);
             this.gamesService.joinRoom(this.gameData.gameId);
             this.gamesService.getRoomGameUsers(this.gameData.gameId).subscribe(players => {
