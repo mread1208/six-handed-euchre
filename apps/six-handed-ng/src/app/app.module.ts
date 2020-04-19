@@ -13,9 +13,10 @@ import { appRoutingModule } from "./app.routing";
 
 import { GamesService } from "./games/games.service";
 import { GameComponent } from "./game/game.component";
+import { MenuComponent } from './menu/menu.component';
 
 @NgModule({
-    declarations: [AppComponent, LoginComponent, SignUpComponent, GamesComponent, GameComponent],
+    declarations: [AppComponent, LoginComponent, SignUpComponent, GamesComponent, GameComponent, MenuComponent],
     imports: [BrowserModule, HttpClientModule, appRoutingModule, FormsModule, ReactiveFormsModule],
     providers: [
         GamesService,
