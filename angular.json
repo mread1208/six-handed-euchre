@@ -21,8 +21,48 @@
                         "polyfills": "apps/six-handed-ng/src/polyfills.ts",
                         "tsConfig": "apps/six-handed-ng/tsconfig.app.json",
                         "aot": true,
-                        "assets": ["apps/six-handed-ng/src/favicon.ico", "apps/six-handed-ng/src/assets"],
-                        "styles": ["apps/six-handed-ng/src/scss/styles.scss"],
+                        "assets": [
+                            "apps/six-handed-ng/src/favicon.ico",
+                            "apps/six-handed-ng/src/assets",
+                            {
+                                "glob": "**/*.svg",
+                                "input": "node_modules/ionicons/dist/ionicons/svg",
+                                "output": "./svg"
+                            }
+                        ],
+                        "styles": [
+                            "apps/six-handed-ng/src/scss/styles.scss",
+                            {
+                                "input": "node_modules/@ionic/angular/css/normalize.css"
+                            },
+                            {
+                                "input": "node_modules/@ionic/angular/css/structure.css"
+                            },
+                            {
+                                "input": "node_modules/@ionic/angular/css/typography.css"
+                            },
+                            {
+                                "input": "node_modules/@ionic/angular/css/core.css"
+                            },
+                            {
+                                "input": "node_modules/@ionic/angular/css/padding.css"
+                            },
+                            {
+                                "input": "node_modules/@ionic/angular/css/float-elements.css"
+                            },
+                            {
+                                "input": "node_modules/@ionic/angular/css/text-alignment.css"
+                            },
+                            {
+                                "input": "node_modules/@ionic/angular/css/text-transformation.css"
+                            },
+                            {
+                                "input": "node_modules/@ionic/angular/css/flex-utils.css"
+                            },
+                            {
+                                "input": "apps/six-handed-ng/src/theme/variables.scss"
+                            }
+                        ],
                         "scripts": []
                     },
                     "configurations": {
@@ -88,6 +128,30 @@
                         "tsConfig": "apps/six-handed-ng/tsconfig.spec.json",
                         "passWithNoTests": true,
                         "setupFile": "apps/six-handed-ng/src/test-setup.ts"
+                    }
+                },
+                "ionic-cordova-serve": {
+                    "builder": "@ionic/angular-toolkit:cordova-serve",
+                    "options": {
+                        "cordovaBuildTarget": "six-handed-ng:ionic-cordova-build",
+                        "devServerTarget": "six-handed-ng:serve"
+                    },
+                    "configurations": {
+                        "production": {
+                            "cordovaBuildTarget": "six-handed-ng:ionic-cordova-build:production",
+                            "devServerTarget": "six-handed-ng:serve:production"
+                        }
+                    }
+                },
+                "ionic-cordova-build": {
+                    "builder": "@ionic/angular-toolkit:cordova-build",
+                    "options": {
+                        "browserTarget": "six-handed-ng:build"
+                    },
+                    "configurations": {
+                        "production": {
+                            "browserTarget": "six-handed-ng:build:production"
+                        }
                     }
                 }
             }

@@ -1,0 +1,6 @@
+{
+    "name": "six-handed-ng",
+    "integrations": {},
+    "type": "angular",
+    "root": "apps/six-handed-ng"
+}
