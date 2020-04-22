@@ -42,7 +42,13 @@
                     </ng-container>
                 </div>
             </div>
-            <ion-button (click)="startGame($event)" *ngIf="gameData?.startGame" expand="block" type="primary">
+            gameData?.hasGameStarted: {{ gameData?.hasGameStarted }}
+            <ion-button
+                (click)="startGame($event)"
+                *ngIf="gameData?.startGame && !gameData?.hasGameStarted"
+                expand="block"
+                type="primary"
+            >
                 Start Game
             </ion-button>
         </ion-card-content>

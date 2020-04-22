@@ -50,13 +50,15 @@ export class GameData {
     numberOfSeats: number;
     seats: Seat[];
     startGame: boolean;
+    hasGameStarted: boolean;
 
-    constructor(gameId, gameName, numberOfSeats, seats, startGame) {
+    constructor(gameId, gameName, numberOfSeats, seats, startGame, hasGameStarted) {
         this.gameId = gameId;
         this.gameName = gameName;
         this.numberOfSeats = numberOfSeats;
         this.seats = seats;
         this.startGame = startGame;
+        this.hasGameStarted = hasGameStarted;
     }
 }
 export class Seat {
@@ -75,7 +77,7 @@ const games: GameData[] = [];
 const createNewRoom = function(roomId: string, gameName: string): GameData {
     const seat1 = new Seat(1, "", "");
     const seat2 = new Seat(2, "", "");
-    const createGame = new GameData(roomId, gameName, 2, [seat1, seat2], false);
+    const createGame = new GameData(roomId, gameName, 2, [seat1, seat2], false, false);
     games.push(createGame);
 
     return createGame;
@@ -110,6 +112,13 @@ const leaveSeat = function(roomId: string, userId: string): GameData {
 
     const numberOfTakenSeats = games[gameIndex].seats.filter(seat => seat.userId !== "").length;
     games[gameIndex].startGame = games[gameIndex].seats.length === numberOfTakenSeats;
+
+    return games[gameIndex];
+};
+
+const startGame = function(roomId: string, userId: string): GameData {
+    const gameIndex = games.findIndex(game => game.gameId === roomId);
+    games[gameIndex].hasGameStarted = true;
 
     return games[gameIndex];
 };
@@ -240,10 +249,8 @@ gamesNamespace.on(`connection`, function(socket) {
         gamesNamespace.emit("getGameData", gameData);
     });
     socket.on("startGame", roomId => {
-        console.log(roomId);
-        console.log(socket.id);
-        // const currentGameRooms = Object.keys(io.of("/games").adapter.rooms).filter(room => room.startsWith("game_"));
-        // io.emit("getRoomNames", games);
+        const gameData: GameData = startGame(roomId, socket.userId);
+        gamesNamespace.emit("getGameData", gameData);
     });
 
     socket.on(`disconnecting`, function() {
