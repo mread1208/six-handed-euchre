@@ -46,12 +46,14 @@ server.on("error", console.error);
 // Game logic
 export class GameData {
     gameId: string;
+    gameName: string;
     numberOfSeats: number;
     seats: Seat[];
     startGame: boolean;
 
-    constructor(gameId, numberOfSeats, seats, startGame) {
+    constructor(gameId, gameName, numberOfSeats, seats, startGame) {
         this.gameId = gameId;
+        this.gameName = gameName;
         this.numberOfSeats = numberOfSeats;
         this.seats = seats;
         this.startGame = startGame;
@@ -70,10 +72,10 @@ export class Seat {
 }
 const games: GameData[] = [];
 
-const createNewRoom = function(roomId: string): GameData {
+const createNewRoom = function(roomId: string, gameName: string): GameData {
     const seat1 = new Seat(1, "", "");
     const seat2 = new Seat(2, "", "");
-    const createGame = new GameData(roomId, 2, [seat1, seat2], false);
+    const createGame = new GameData(roomId, gameName, 2, [seat1, seat2], false);
     games.push(createGame);
 
     return createGame;
@@ -105,6 +107,10 @@ const leaveSeat = function(roomId: string, userId: string): GameData {
         games[gameIndex].seats[seatIndex].userId = "";
         games[gameIndex].seats[seatIndex].userName = "";
     }
+
+    const numberOfTakenSeats = games[gameIndex].seats.filter(seat => seat.userId !== "").length;
+    games[gameIndex].startGame = games[gameIndex].seats.length === numberOfTakenSeats;
+
     return games[gameIndex];
 };
 
@@ -160,12 +166,12 @@ gamesNamespace.on(`connection`, function(socket) {
     });
     socket.on("joinGamesDashboard", () => {
         const currentGameRooms = Object.keys(io.of("/games").adapter.rooms).filter(room => room.startsWith("game_"));
-        gamesNamespace.emit("getRoomNames", currentGameRooms);
+        gamesNamespace.emit("getRoomNames", games);
     });
-    socket.on("createRoom", () => {
+    socket.on("createRoom", gameName => {
         // Prefix all games with game_ so we can identify which sockets are games.
         const newRoomId = `game_${uuid()}`;
-        createNewRoom(newRoomId);
+        createNewRoom(newRoomId, gameName);
         gamesNamespace.emit("joinNewRoom", newRoomId);
     });
 
@@ -182,11 +188,11 @@ gamesNamespace.on(`connection`, function(socket) {
             let gameData = games.find(game => game.gameId === roomId);
             // If game doesn't exist, let's add to the array.
             if (gameData === undefined) {
-                gameData = createNewRoom(roomId);
+                gameData = createNewRoom(roomId, roomId);
             }
             gamesNamespace.emit("getGameData", gameData);
             // Why are we sending room names when we join?
-            gamesNamespace.emit("getRoomNames", currentGameRooms);
+            gamesNamespace.emit("getRoomNames", games);
         });
         // Gets a list of all clients in the room
         gamesNamespace.in(roomId).clients((error, clients) => {
@@ -204,7 +210,7 @@ gamesNamespace.on(`connection`, function(socket) {
             const currentGameRooms = Object.keys(io.of("/games").adapter.rooms).filter(room =>
                 room.startsWith("game_")
             );
-            gamesNamespace.emit("getRoomNames", currentGameRooms);
+            gamesNamespace.emit("getRoomNames", games);
         });
         // Gets a list of all clients in the room
         gamesNamespace.in(roomId).clients((error, clients) => {
@@ -217,24 +223,27 @@ gamesNamespace.on(`connection`, function(socket) {
         });
         // Leave your seat if you're in one.
         const gameData: GameData = leaveSeat(roomId, socket.userId);
-        // const currentGameRooms = Object.keys(io.of("/games").adapter.rooms).filter(room => room.startsWith("game_"));
         gamesNamespace.emit("getGameData", gameData);
     });
     socket.on("getRoomNames", () => {
-        const currentGameRooms = Object.keys(io.of("/games").adapter.rooms).filter(room => room.startsWith("game_"));
-        io.emit("getRoomNames", currentGameRooms);
+        // const currentGameRooms = Object.keys(io.of("/games").adapter.rooms).filter(room => room.startsWith("game_"));
+        console.log(games);
+        io.emit("getRoomNames", games);
     });
 
     socket.on("takeSeat", (roomId, seatNumber) => {
         const gameData: GameData = takeSeat(roomId, socket.userId, socket.username, seatNumber);
-        // const currentGameRooms = Object.keys(io.of("/games").adapter.rooms).filter(room => room.startsWith("game_"));
+        gamesNamespace.emit("getGameData", gameData);
+    });
+    socket.on("leaveSeat", roomId => {
+        const gameData: GameData = leaveSeat(roomId, socket.userId);
         gamesNamespace.emit("getGameData", gameData);
     });
     socket.on("startGame", roomId => {
         console.log(roomId);
         console.log(socket.id);
         // const currentGameRooms = Object.keys(io.of("/games").adapter.rooms).filter(room => room.startsWith("game_"));
-        // io.emit("getRoomNames", currentGameRooms);
+        // io.emit("getRoomNames", games);
     });
 
     socket.on(`disconnecting`, function() {

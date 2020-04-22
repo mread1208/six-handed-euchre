@@ -1,0 +1,13 @@
+.seats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid gray;
+
+    .seat {
+        padding: 20px;
+
+        &:first-child {
+            border-right: 1px solid gray;
+        }
+    }
+}

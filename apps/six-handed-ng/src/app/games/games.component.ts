@@ -6,7 +6,7 @@ import { GamesService } from "./games.service";
 import { AuthService } from "../auth/auth.service";
 import { User } from "../models/User";
 
-import { Game } from "../models/Game";
+import { GameData } from "../models/GameData";
 @Component({
     selector: "six-handed-euchre-games",
     templateUrl: "./games.component.html",
@@ -14,7 +14,7 @@ import { Game } from "../models/Game";
 })
 export class GamesComponent implements OnInit {
     messages: string[] = [];
-    rooms: Game[] = [];
+    games: GameData;
     createRoomForm: FormGroup;
     public currentUser: User;
 
@@ -35,8 +35,8 @@ export class GamesComponent implements OnInit {
         // Set the socketUserData again just in case the user disconnects or refreshes the page
         this.gamesService.setSocketUserData(this.currentUser);
         this.gamesService.joinGamesDashboard();
-        this.gamesService.getRooms().subscribe(rooms => {
-            this.rooms = rooms;
+        this.gamesService.getGames().subscribe((games: GameData) => {
+            this.games = games;
         });
     }
     sendMessage(message) {

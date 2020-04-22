@@ -3,7 +3,7 @@ import { HttpClient } from "@angular/common/http";
 import { Observable } from "rxjs";
 import * as io from "socket.io-client";
 
-import { Game } from "../models/Game";
+import { GameData } from "../models/GameData";
 
 @Injectable({
     providedIn: "root",
@@ -32,8 +32,8 @@ export class GamesService {
         this.gameSocket.emit("chat_message", message);
     }
 
-    public createRoom = roomName => {
-        this.gameSocket.emit("createRoom", roomName);
+    public createRoom = gameName => {
+        this.gameSocket.emit("createRoom", gameName);
     };
     public joinNewRoom = () => {
         return Observable.create(observer => {
@@ -42,10 +42,10 @@ export class GamesService {
             });
         });
     };
-    public getRooms = () => {
+    public getGames = () => {
         return Observable.create(observer => {
-            this.gameSocket.on("getRoomNames", rooms => {
-                observer.next(rooms);
+            this.gameSocket.on("getRoomNames", (games: GameData) => {
+                observer.next(games);
             });
         });
     };
@@ -69,6 +69,9 @@ export class GamesService {
 
     public takeSeat(gameId: string, seatNumber: number) {
         this.gameSocket.emit("takeSeat", gameId, seatNumber);
+    }
+    public leaveSeat(gameId: string) {
+        this.gameSocket.emit("leaveSeat", gameId);
     }
     public startGame(gameId: string) {
         this.gameSocket.emit("startGame", gameId);

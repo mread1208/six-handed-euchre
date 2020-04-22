@@ -1,11 +1,13 @@
 export class GameData {
     gameId: string;
+    gameName: string;
     numberOfSeats: number;
     seats: Seat[];
     startGame: boolean;
 
-    constructor(gameId, numberOfSeats, seats, startGame) {
+    constructor(gameId: string, gameName: string, numberOfSeats: number, seats: Seat[], startGame: boolean) {
         this.gameId = gameId;
+        this.gameName = gameName;
         this.numberOfSeats = numberOfSeats;
         this.seats = seats;
         this.startGame = startGame;

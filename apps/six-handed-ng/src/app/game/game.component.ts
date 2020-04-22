@@ -10,12 +10,13 @@ import { GameData } from "../models/GameData";
 @Component({
     selector: "six-handed-euchre-game",
     templateUrl: "./game.component.html",
-    styleUrls: ["./game.component.css"],
+    styleUrls: ["./game.component.scss"],
 })
 export class GameComponent implements OnInit, OnDestroy {
-    private currentUser: User;
+    public currentUser: User;
     public players: string[] = [];
     public gameData: GameData;
+    public hasTakenSeat: boolean = false;
 
     constructor(
         private gamesService: GamesService,
@@ -28,25 +29,29 @@ export class GameComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.route.params.subscribe(params => {
-            this.gameData = new GameData(params["id"], 2, [], false);
             this.gamesService.setSocketUserData(this.currentUser);
-            this.gamesService.joinRoom(this.gameData.gameId);
-            this.gamesService.getRoomGameUsers(this.gameData.gameId).subscribe(players => {
+            this.gamesService.joinRoom(params["id"]);
+            this.gamesService.getRoomGameUsers(params["id"]).subscribe(players => {
                 this.players = players;
             });
             this.gamesService.getGameData().subscribe(gameData => {
                 this.gameData = gameData;
+                this.hasTakenSeat = gameData.seats.find(seat => seat.userId === this.currentUser.userId) ? true : false;
             });
 
             // If the API doesn't properly set user data on the socker, resend it!
             this.gamesService.refreshSocketUserData().subscribe(() => {
-                this.gamesService.joinRoom(this.gameData.gameId);
+                this.gamesService.joinRoom(params["id"]);
             });
         });
     }
 
     ngOnDestroy(): void {
         this.gamesService.leaveRoom(this.gameData.gameId, this.currentUser);
+    }
+
+    public leaveSeat() {
+        this.gamesService.leaveSeat(this.gameData.gameId);
     }
 
     public takeSeat(event, seatNumber: number) {

@@ -11,7 +11,7 @@
 <ion-content class="ion-padding">
     <ion-card>
         <ion-card-header>
-            <ion-card-subtitle>Login or Signup</ion-card-subtitle>
+            <ion-card-title>Welcome to game: {{ gameData?.gameName }}</ion-card-title>
         </ion-card-header>
         <ion-card-content>
             <h2>Players in this room</h2>
@@ -19,19 +19,35 @@
                 <li *ngFor="let player of players">{{ player }}</li>
             </ul>
             <div class="seats">
-                <p *ngFor="let seat of gameData.seats">
-                    <ng-container *ngIf="seat.userName">
-                        Seat {{ seat.seatNumber }} - {{ seat.userName }}
-                    </ng-container>
+                <div *ngFor="let seat of gameData?.seats" class="seat">
+                    <p>Seat {{ seat.seatNumber }}</p>
                     <ng-container *ngIf="!seat.userName">
-                        <a href="#" (click)="takeSeat($event, seat.seatNumber)"> Join Seat {{ seat.seatNumber }} </a>
+                        <p>Waiting for player to join.</p>
                     </ng-container>
-                </p>
+                    <ng-container *ngIf="!seat.userName && !hasTakenSeat">
+                        <ion-button type="primary" (click)="takeSeat($event, seat.seatNumber)">
+                            Join Seat {{ seat.seatNumber }}
+                        </ion-button>
+                    </ng-container>
+                    <ng-container *ngIf="seat.userName">
+                        <p>Player: {{ seat.userName }}</p>
+                        <ion-button
+                            *ngIf="seat.userName === currentUser.name"
+                            fill="outline"
+                            type="primary"
+                            (click)="leaveSeat()"
+                        >
+                            Leave Seat {{ seat.seatNumber }}
+                        </ion-button>
+                    </ng-container>
+                </div>
             </div>
-            <p *ngIf="gameData.startGame"><a href="#" (click)="startGame($event)">Start Game</a></p>
+            <ion-button (click)="startGame($event)" *ngIf="gameData?.startGame" expand="block" type="primary">
+                Start Game
+            </ion-button>
         </ion-card-content>
     </ion-card>
-    <ion-button color="primary" routerLink="/games">
+    <ion-button color="secondary" fill="clear" routerLink="/games" (click)="leaveSeat()">
         <ion-icon slot="start" name="chevron-back-outline"></ion-icon>
         Back to games dashboard
     </ion-button>
