@@ -42,7 +42,6 @@
                     </ng-container>
                 </div>
             </div>
-            gameData?.hasGameStarted: {{ gameData?.hasGameStarted }}
             <ion-button
                 (click)="startGame($event)"
                 *ngIf="gameData?.startGame && !gameData?.hasGameStarted"
