@@ -13,12 +13,18 @@ import { appRoutingModule } from "./app.routing";
 
 import { GamesService } from "./games/games.service";
 import { GameComponent } from "./game/game.component";
-import { MenuComponent } from './menu/menu.component';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule } from "@ionic/angular";
 
 @NgModule({
-    declarations: [AppComponent, LoginComponent, SignUpComponent, GamesComponent, GameComponent, MenuComponent],
-    imports: [BrowserModule, HttpClientModule, appRoutingModule, FormsModule, ReactiveFormsModule, IonicModule.forRoot()],
+    declarations: [AppComponent, LoginComponent, SignUpComponent, GamesComponent, GameComponent],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        appRoutingModule,
+        FormsModule,
+        ReactiveFormsModule,
+        IonicModule.forRoot(),
+    ],
     providers: [
         GamesService,
         { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },

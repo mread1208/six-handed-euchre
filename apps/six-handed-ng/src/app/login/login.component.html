@@ -1,8 +1,35 @@
-<form [formGroup]="loginForm" (ngSubmit)="login()">
-    <label for="email">Email</label>
-    <input type="email" formControlName="email" required />
-    <label for="password">Password</label>
-    <input type="password" formControlName="password" required />
-    <button>Submit</button>
-</form>
-<a routerLink="/sign-up">Sign Up</a>
+<ion-header>
+    <ion-toolbar>
+        <ion-buttons slot="start">
+            <ion-menu-toggle>
+                <ion-button>
+                    <ion-icon slot="icon-only" name="menu"></ion-icon>
+                </ion-button>
+            </ion-menu-toggle>
+        </ion-buttons>
+        <ion-title>Six Handed Euchre - Login</ion-title>
+    </ion-toolbar>
+</ion-header>
+<ion-content class="ion-padding">
+    <ion-card>
+        <ion-card-header>
+            <ion-card-subtitle>Login or Signup</ion-card-subtitle>
+        </ion-card-header>
+
+        <ion-card-content>
+            <form [formGroup]="loginForm" (ngSubmit)="login()">
+                <ion-item>
+                    <ion-label for="email" position="floating" color="primary">Email</ion-label>
+                    <ion-input type="email" formControlName="email" required></ion-input>
+                </ion-item>
+                <ion-item>
+                    <ion-label for="password" position="floating" color="primary">Password</ion-label>
+                    <ion-input type="password" formControlName="password" required></ion-input>
+                </ion-item>
+
+                <ion-button type="submit" color="primary">Login</ion-button>
+                <ion-button routerLink="/sign-up" fill="outline" color="secondary">Sign Up</ion-button>
+            </form>
+        </ion-card-content>
+    </ion-card>
+</ion-content>

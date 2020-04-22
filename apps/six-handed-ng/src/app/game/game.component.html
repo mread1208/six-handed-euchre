@@ -1,17 +1,40 @@
-<p>game works!</p>
-<h2>Players in this room</h2>
-<ul>
-    <li *ngFor="let player of players">{{ player }}</li>
-</ul>
-
-<div class="seats">
-    <p *ngFor="let seat of gameData.seats">
-        <ng-container *ngIf="seat.userName"> Seat {{ seat.seatNumber }} - {{ seat.userName }} </ng-container>
-        <ng-container *ngIf="!seat.userName">
-            <a href="#" (click)="takeSeat($event, seat.seatNumber)"> Join Seat {{ seat.seatNumber }} </a>
-        </ng-container>
-    </p>
-</div>
-
-<p *ngIf="gameData.startGame"><a href="#" (click)="startGame($event)">Start Game</a></p>
-<p><a routerLink="/games">Back to games dashboard</a></p>
+<ion-header>
+    <ion-toolbar>
+        <ion-buttons slot="start">
+            <ion-menu-toggle>
+                <ion-button>
+                    <ion-icon slot="icon-only" name="menu"></ion-icon>
+                </ion-button>
+            </ion-menu-toggle>
+        </ion-buttons>
+        <ion-title>Six Handed Euchre - Games</ion-title>
+    </ion-toolbar>
+</ion-header>
+<ion-content class="ion-padding">
+    <ion-card>
+        <ion-card-header>
+            <ion-card-subtitle>Login or Signup</ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content>
+            <h2>Players in this room</h2>
+            <ul>
+                <li *ngFor="let player of players">{{ player }}</li>
+            </ul>
+            <div class="seats">
+                <p *ngFor="let seat of gameData.seats">
+                    <ng-container *ngIf="seat.userName">
+                        Seat {{ seat.seatNumber }} - {{ seat.userName }}
+                    </ng-container>
+                    <ng-container *ngIf="!seat.userName">
+                        <a href="#" (click)="takeSeat($event, seat.seatNumber)"> Join Seat {{ seat.seatNumber }} </a>
+                    </ng-container>
+                </p>
+            </div>
+            <p *ngIf="gameData.startGame"><a href="#" (click)="startGame($event)">Start Game</a></p>
+        </ion-card-content>
+    </ion-card>
+    <ion-button color="primary" routerLink="/games">
+        <ion-icon slot="start" name="chevron-back-outline"></ion-icon>
+        Back to games dashboard
+    </ion-button>
+</ion-content>

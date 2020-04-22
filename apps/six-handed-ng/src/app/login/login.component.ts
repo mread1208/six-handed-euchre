@@ -40,6 +40,7 @@ export class LoginComponent implements OnInit {
     }
 
     login() {
+        console.log("login");
         // stop here if form is invalid
         if (this.loginForm.invalid) {
             return;
