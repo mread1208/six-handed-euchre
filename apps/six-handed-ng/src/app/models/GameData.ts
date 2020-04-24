@@ -27,10 +27,17 @@ export class Seat {
     seatNumber: number;
     userId: string;
     userName: string;
+    isYourTurn: boolean;
+    hand: Card[];
 
-    constructor(seatNumber, userId, userName) {
+    constructor(seatNumber, userId, userName, hand) {
         this.seatNumber = seatNumber;
         this.userId = userId;
         this.userName = userName;
+        this.hand = hand;
     }
+}
+export class Card {
+    cardValue: string;
+    suit: string;
 }

@@ -76,6 +76,9 @@ export class GamesService {
     public startGame(gameId: string) {
         this.gameSocket.emit("startGame", gameId);
     }
+    public takeYourTurn(gameId: string, seatNumber: number) {
+        this.gameSocket.emit("takeYourTurn", gameId, seatNumber);
+    }
     public getGameData = () => {
         return Observable.create(observer => {
             this.gameSocket.on("getGameData", gameData => {

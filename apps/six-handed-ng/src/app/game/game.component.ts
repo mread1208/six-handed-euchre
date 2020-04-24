@@ -63,4 +63,9 @@ export class GameComponent implements OnInit, OnDestroy {
         event.preventDefault();
         this.gamesService.startGame(this.gameData.gameId);
     }
+
+    public takeYourTurn(event, seatNumber) {
+        event.preventDefault();
+        this.gamesService.takeYourTurn(this.gameData.gameId, seatNumber);
+    }
 }

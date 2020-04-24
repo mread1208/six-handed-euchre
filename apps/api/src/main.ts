@@ -43,7 +43,7 @@ const server = app.listen(port, () => {
 });
 server.on("error", console.error);
 
-// Game logic
+// Game Models
 export class GameData {
     gameId: string;
     gameName: string;
@@ -51,6 +51,7 @@ export class GameData {
     seats: Seat[];
     startGame: boolean;
     hasGameStarted: boolean;
+    deck: any;
 
     constructor(gameId, gameName, numberOfSeats, seats, startGame, hasGameStarted) {
         this.gameId = gameId;
@@ -65,18 +66,28 @@ export class Seat {
     seatNumber: number;
     userId: string;
     userName: string;
+    isYourTurn: boolean;
+    hand: Card[];
 
-    constructor(seatNumber, userId, userName) {
+    constructor(seatNumber, userId, userName, hand) {
         this.seatNumber = seatNumber;
         this.userId = userId;
         this.userName = userName;
+        this.hand = hand;
     }
 }
+
+export class Card {
+    cardValue: string;
+    suit: string;
+}
+
 const games: GameData[] = [];
 
+// Game Logic
 const createNewRoom = function(roomId: string, gameName: string): GameData {
-    const seat1 = new Seat(1, "", "");
-    const seat2 = new Seat(2, "", "");
+    const seat1 = new Seat(1, "", "", []);
+    const seat2 = new Seat(2, "", "", []);
     const createGame = new GameData(roomId, gameName, 2, [seat1, seat2], false, false);
     games.push(createGame);
 
@@ -120,8 +131,70 @@ const startGame = function(roomId: string, userId: string): GameData {
     const gameIndex = games.findIndex(game => game.gameId === roomId);
     games[gameIndex].hasGameStarted = true;
 
+    const newDeck = getDeck();
+    const newShuffledDeck: Card[] = shuffleDeck(newDeck);
+    // distribute the shuffled deck evenly amongst players
+    let playerCount = 0;
+    for (let i = 0; i < newShuffledDeck.length; i++) {
+        // Reset the player count when it hits the last player to distribute the cards evenly
+        if (playerCount === games[gameIndex].numberOfSeats) {
+            playerCount = 0;
+        }
+        games[gameIndex].seats[playerCount].hand.push(newShuffledDeck[i]);
+        playerCount++;
+    }
+
+    // Set the starting players turn, always player 1 at the start of a game
+    for (let p = 0; p < games[gameIndex].seats.length; p++) {
+        games[gameIndex].seats[p].isYourTurn = games[gameIndex].seats[p].seatNumber === 1;
+    }
+
+    games[gameIndex].deck = newShuffledDeck;
+
     return games[gameIndex];
 };
+
+const takeYourTurn = function(roomId: string, userId: string, seatNumber: number): GameData {
+    const gameIndex = games.findIndex(game => game.gameId === roomId);
+    // If last seat in game, then player 1's turn.
+    const nextPlayerTurn = seatNumber + 1 > games[gameIndex].seats.length ? 1 : seatNumber + 1;
+    // Loop through seats and set player turns
+    for (let p = 0; p < games[gameIndex].seats.length; p++) {
+        games[gameIndex].seats[p].isYourTurn = games[gameIndex].seats[p].seatNumber === nextPlayerTurn;
+    }
+
+    return games[gameIndex];
+};
+
+// Helper functions
+const suits = ["spades", "diamonds", "clubs", "hearts"];
+const values = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+function getDeck(): Card[] {
+    let deck: Card[] = new Array();
+
+    for (let i = 0; i < suits.length; i++) {
+        for (let x = 0; x < values.length; x++) {
+            let card: Card = { cardValue: values[x], suit: suits[i] };
+            deck.push(card);
+        }
+    }
+
+    return deck;
+}
+function shuffleDeck(deck): Card[] {
+    // for 1000 turns
+    // switch the values of two random cards
+    for (let i = 0; i < 1000; i++) {
+        const location1 = Math.floor(Math.random() * deck.length);
+        const location2 = Math.floor(Math.random() * deck.length);
+        const tmp = deck[location1];
+
+        deck[location1] = deck[location2];
+        deck[location2] = tmp;
+    }
+
+    return deck;
+}
 
 // const checkScore = (room, sendMessage = false) => {
 //     let winner = null;
@@ -250,6 +323,10 @@ gamesNamespace.on(`connection`, function(socket) {
     });
     socket.on("startGame", roomId => {
         const gameData: GameData = startGame(roomId, socket.userId);
+        gamesNamespace.emit("getGameData", gameData);
+    });
+    socket.on("takeYourTurn", (roomId, seatNumber) => {
+        const gameData: GameData = takeYourTurn(roomId, socket.userId, seatNumber);
         gamesNamespace.emit("getGameData", gameData);
     });
 

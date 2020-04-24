@@ -10,4 +10,9 @@
             border-right: 1px solid gray;
         }
     }
+
+    .seat--player-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
 }
