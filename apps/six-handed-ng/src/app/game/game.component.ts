@@ -16,7 +16,8 @@ export class GameComponent implements OnInit, OnDestroy {
     public currentUser: User;
     public players: string[] = [];
     public gameData: GameData;
-    public hasTakenSeat: boolean = false;
+    public hasTakenSeat = false;
+    public currentPlayersTurn: string;
 
     constructor(
         private gamesService: GamesService,

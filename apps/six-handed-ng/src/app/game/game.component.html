@@ -50,7 +50,7 @@
                         </div>
                     </div> -->
                     <ion-button
-                        *ngIf="gameData?.hasGameStarted && seat.isYourTurn"
+                        *ngIf="gameData?.hasGameStarted && gameData.isYourTurn"
                         fill="outline"
                         type="primary"
                         (click)="takeYourTurn($event, seat.seatNumber)"
@@ -61,7 +61,7 @@
             </div>
             <ion-button
                 (click)="startGame($event)"
-                *ngIf="gameData?.startGame && !gameData?.hasGameStarted"
+                *ngIf="gameData?.canStartGame && !gameData?.hasGameStarted"
                 expand="block"
                 type="primary"
             >

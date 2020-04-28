@@ -2,39 +2,36 @@ export class GameData {
     gameId: string;
     gameName: string;
     numberOfSeats: number;
-    seats: Seat[];
-    startGame: boolean;
+    canStartGame: boolean;
     hasGameStarted: boolean;
+    seats: Seat[];
+    isYourTurn: boolean;
+    yourHand: Card[];
 
     constructor(
         gameId: string,
         gameName: string,
         numberOfSeats: number,
         seats: Seat[],
-        startGame: boolean,
+        canStartGame: boolean,
         hasGameStarted: boolean
     ) {
         this.gameId = gameId;
         this.gameName = gameName;
         this.numberOfSeats = numberOfSeats;
         this.seats = seats;
-        this.startGame = startGame;
+        this.canStartGame = canStartGame;
         this.hasGameStarted = hasGameStarted;
     }
 }
 
 export class Seat {
     seatNumber: number;
-    userId: string;
     userName: string;
-    isYourTurn: boolean;
-    hand: Card[];
 
-    constructor(seatNumber, userId, userName, hand) {
+    constructor(seatNumber, userName) {
         this.seatNumber = seatNumber;
-        this.userId = userId;
         this.userName = userName;
-        this.hand = hand;
     }
 }
 export class Card {

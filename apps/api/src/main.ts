@@ -1,5 +1,6 @@
 import * as express from "express";
 import { Socket } from "socket.io";
+import { GameData, Seat, Card, GameDataResponse, SeatsResponse } from "./app/models/GameData";
 
 const config = require("./app/common/config/env.config.js");
 const app = express();
@@ -44,74 +45,68 @@ const server = app.listen(port, () => {
 server.on("error", console.error);
 
 // Game Models
-export class GameData {
-    gameId: string;
-    gameName: string;
-    numberOfSeats: number;
-    seats: Seat[];
-    startGame: boolean;
-    hasGameStarted: boolean;
-    deck: any;
-
-    constructor(gameId, gameName, numberOfSeats, seats, startGame, hasGameStarted) {
-        this.gameId = gameId;
-        this.gameName = gameName;
-        this.numberOfSeats = numberOfSeats;
-        this.seats = seats;
-        this.startGame = startGame;
-        this.hasGameStarted = hasGameStarted;
-    }
-}
-export class Seat {
-    seatNumber: number;
-    userId: string;
-    userName: string;
-    isYourTurn: boolean;
-    hand: Card[];
-
-    constructor(seatNumber, userId, userName, hand) {
-        this.seatNumber = seatNumber;
-        this.userId = userId;
-        this.userName = userName;
-        this.hand = hand;
-    }
-}
-
-export class Card {
-    cardValue: string;
-    suit: string;
-}
 
 const games: GameData[] = [];
 
 // Game Logic
 const createNewRoom = function(roomId: string, gameName: string): GameData {
-    const seat1 = new Seat(1, "", "", []);
-    const seat2 = new Seat(2, "", "", []);
+    const seat1 = new Seat(1, "", "", false, []);
+    const seat2 = new Seat(2, "", "", false, []);
     const createGame = new GameData(roomId, gameName, 2, [seat1, seat2], false, false);
-    games.push(createGame);
 
+    // Push game logic to main array
+    games.push(createGame);
+    // Send client back massaged data
     return createGame;
 };
-const takeSeat = function(roomId: string, userId: string, userName: string, seatNumber: number): GameData {
+const takeSeat = function(roomId: string, userId: string, userName: string, seatNumber: number): GameDataResponse {
     const gameIndex = games.findIndex(game => game.gameId === roomId);
     const seatIndex = games[gameIndex].seats.findIndex(seat => seat.seatNumber === seatNumber);
+    const currentTurnIndex = games[gameIndex].seats.findIndex(seat => seat.isYourTurn);
+    const isYourTurn = currentTurnIndex !== -1 ? games[gameIndex].seats[currentTurnIndex].isYourTurn : false;
+    const yourHand = games[gameIndex].seats[seatIndex].hand;
+
     // Check to see if user is already in a seat
     if (games[gameIndex].seats.find(seat => seat.userId === userId)) {
         console.error("User already in a seat!");
         // Throw error, "User already in seat {{i}}!"
-        return games[gameIndex];
+        return new GameDataResponse(
+            roomId,
+            games[gameIndex].gameName,
+            games[gameIndex].numberOfSeats,
+            games[gameIndex].canStartGame,
+            games[gameIndex].hasGameStarted,
+            games[gameIndex].seats,
+            isYourTurn,
+            yourHand
+        );
     }
     // Create new seat with user info, add to index.
     games[gameIndex].seats[seatIndex].userId = userId;
     games[gameIndex].seats[seatIndex].userName = userName;
+
     // Can the game start?
     const numberOfTakenSeats = games[gameIndex].seats.filter(seat => seat.userId !== "").length;
-    games[gameIndex].startGame = games[gameIndex].seats.length === numberOfTakenSeats;
+    games[gameIndex].canStartGame = games[gameIndex].seats.length === numberOfTakenSeats;
 
-    return games[gameIndex];
+    // Seats for Frontend
+    const seatsResponse: SeatsResponse[] = [];
+    games[gameIndex].seats.forEach(seat => {
+        seatsResponse.push(new SeatsResponse(seat.seatNumber, seat.userId, seat.userName, seat.isYourTurn));
+    });
+
+    return new GameDataResponse(
+        roomId,
+        games[gameIndex].gameName,
+        games[gameIndex].numberOfSeats,
+        games[gameIndex].canStartGame,
+        games[gameIndex].hasGameStarted,
+        seatsResponse,
+        isYourTurn,
+        yourHand
+    );
 };
-const leaveSeat = function(roomId: string, userId: string): GameData {
+const leaveSeat = function(roomId: string, userId: string): GameDataResponse {
     const gameIndex = games.findIndex(game => game.gameId === roomId);
     const seatIndex = games[gameIndex].seats.findIndex(seat => seat.userId === userId);
     // Check to see if user is in a seat
@@ -122,17 +117,35 @@ const leaveSeat = function(roomId: string, userId: string): GameData {
     }
 
     const numberOfTakenSeats = games[gameIndex].seats.filter(seat => seat.userId !== "").length;
-    games[gameIndex].startGame = games[gameIndex].seats.length === numberOfTakenSeats;
+    games[gameIndex].canStartGame = games[gameIndex].seats.length === numberOfTakenSeats;
 
-    return games[gameIndex];
+    // Seats for Frontend
+    const seatsResponse: SeatsResponse[] = [];
+    games[gameIndex].seats.forEach(seat => {
+        seatsResponse.push(new SeatsResponse(seat.seatNumber, seat.userId, seat.userName, seat.isYourTurn));
+    });
+
+    return new GameDataResponse(
+        roomId,
+        games[gameIndex].gameName,
+        games[gameIndex].numberOfSeats,
+        games[gameIndex].canStartGame,
+        games[gameIndex].hasGameStarted,
+        seatsResponse,
+        false,
+        []
+    );
 };
 
-const startGame = function(roomId: string, userId: string): GameData {
+const startGame = function(roomId: string, userId: string): GameDataResponse {
     const gameIndex = games.findIndex(game => game.gameId === roomId);
-    games[gameIndex].hasGameStarted = true;
-
+    const seatIndex = games[gameIndex].seats.findIndex(seat => seat.userId === userId);
     const newDeck = getDeck();
     const newShuffledDeck: Card[] = shuffleDeck(newDeck);
+
+    games[gameIndex].hasGameStarted = true;
+    games[gameIndex].deck = newShuffledDeck;
+
     // distribute the shuffled deck evenly amongst players
     let playerCount = 0;
     for (let i = 0; i < newShuffledDeck.length; i++) {
@@ -149,18 +162,40 @@ const startGame = function(roomId: string, userId: string): GameData {
         games[gameIndex].seats[p].isYourTurn = games[gameIndex].seats[p].seatNumber === 1;
     }
 
-    games[gameIndex].deck = newShuffledDeck;
+    // Seats for Frontend
+    const seatsResponse: SeatsResponse[] = [];
+    games[gameIndex].seats.forEach(seat => {
+        seatsResponse.push(new SeatsResponse(seat.seatNumber, seat.userId, seat.userName, seat.isYourTurn));
+    });
 
-    return games[gameIndex];
+    return new GameDataResponse(
+        roomId,
+        games[gameIndex].gameName,
+        games[gameIndex].numberOfSeats,
+        games[gameIndex].canStartGame,
+        games[gameIndex].hasGameStarted,
+        seatsResponse,
+        games[gameIndex].seats[seatIndex].isYourTurn,
+        games[gameIndex].seats[seatIndex].hand
+    );
 };
 
 const takeYourTurn = function(roomId: string, userId: string, seatNumber: number): GameData {
     const gameIndex = games.findIndex(game => game.gameId === roomId);
+
+    // Verify it's actually this player's turn
+    const currentSeatTurnIndex = games[gameIndex].seats.findIndex(seat => seat.seatNumber === seatNumber);
+    if (games[gameIndex].seats[currentSeatTurnIndex].userId !== userId) {
+        // TODO: Return an error!
+        console.error("It's not your time breh!");
+        return games[gameIndex];
+    }
+
     // If last seat in game, then player 1's turn.
-    const nextPlayerTurn = seatNumber + 1 > games[gameIndex].seats.length ? 1 : seatNumber + 1;
+    const nextSeatTurn = seatNumber + 1 > games[gameIndex].seats.length ? 1 : seatNumber + 1;
     // Loop through seats and set player turns
     for (let p = 0; p < games[gameIndex].seats.length; p++) {
-        games[gameIndex].seats[p].isYourTurn = games[gameIndex].seats[p].seatNumber === nextPlayerTurn;
+        games[gameIndex].seats[p].isYourTurn = games[gameIndex].seats[p].seatNumber === nextSeatTurn;
     }
 
     return games[gameIndex];
@@ -170,11 +205,11 @@ const takeYourTurn = function(roomId: string, userId: string, seatNumber: number
 const suits = ["spades", "diamonds", "clubs", "hearts"];
 const values = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 function getDeck(): Card[] {
-    let deck: Card[] = new Array();
+    const deck: Card[] = new Array();
 
     for (let i = 0; i < suits.length; i++) {
         for (let x = 0; x < values.length; x++) {
-            let card: Card = { cardValue: values[x], suit: suits[i] };
+            const card: Card = { cardValue: values[x], suit: suits[i] };
             deck.push(card);
         }
     }
@@ -304,7 +339,7 @@ gamesNamespace.on(`connection`, function(socket) {
             gamesNamespace.to(roomId).emit("getRoomGameUsers", gameUsersNames);
         });
         // Leave your seat if you're in one.
-        const gameData: GameData = leaveSeat(roomId, socket.userId);
+        const gameData: GameDataResponse = leaveSeat(roomId, socket.userId);
         gamesNamespace.emit("getGameData", gameData);
     });
     socket.on("getRoomNames", () => {
@@ -314,15 +349,15 @@ gamesNamespace.on(`connection`, function(socket) {
     });
 
     socket.on("takeSeat", (roomId, seatNumber) => {
-        const gameData: GameData = takeSeat(roomId, socket.userId, socket.username, seatNumber);
+        const gameData: GameDataResponse = takeSeat(roomId, socket.userId, socket.username, seatNumber);
         gamesNamespace.emit("getGameData", gameData);
     });
     socket.on("leaveSeat", roomId => {
-        const gameData: GameData = leaveSeat(roomId, socket.userId);
+        const gameData: GameDataResponse = leaveSeat(roomId, socket.userId);
         gamesNamespace.emit("getGameData", gameData);
     });
     socket.on("startGame", roomId => {
-        const gameData: GameData = startGame(roomId, socket.userId);
+        const gameData: GameDataResponse = startGame(roomId, socket.userId);
         gamesNamespace.emit("getGameData", gameData);
     });
     socket.on("takeYourTurn", (roomId, seatNumber) => {
