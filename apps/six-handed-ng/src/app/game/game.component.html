@@ -67,6 +67,12 @@
             >
                 Start Game
             </ion-button>
+            <div class="your-cards" *ngIf="gameData?.hasGameStarted">
+                <div class="your-card" *ngFor="let card of gameData.yourHand">
+                    <p>{{ card.suit }}</p>
+                    <p>{{ card.cardValue }}</p>
+                </div>
+            </div>
         </ion-card-content>
     </ion-card>
     <ion-button color="secondary" fill="clear" routerLink="/games" (click)="leaveSeat()">

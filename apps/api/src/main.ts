@@ -168,6 +168,9 @@ const startGame = function(roomId: string, userId: string): GameDataResponse {
         seatsResponse.push(new SeatsResponse(seat.seatNumber, seat.userId, seat.userName, seat.isYourTurn));
     });
 
+    console.log(games[gameIndex].seats);
+    console.log(userId);
+
     return new GameDataResponse(
         roomId,
         games[gameIndex].gameName,

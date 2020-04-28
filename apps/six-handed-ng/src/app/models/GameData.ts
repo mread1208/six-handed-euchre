@@ -12,9 +12,9 @@ export class GameData {
         gameId: string,
         gameName: string,
         numberOfSeats: number,
-        seats: Seat[],
         canStartGame: boolean,
-        hasGameStarted: boolean
+        hasGameStarted: boolean,
+        seats: Seat[]
     ) {
         this.gameId = gameId;
         this.gameName = gameName;

@@ -16,3 +16,13 @@
         grid-template-columns: 1fr 1fr;
     }
 }
+
+.your-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    border: 1px solid gray;
+
+    .your-card {
+        padding: 10px;
+    }
+}

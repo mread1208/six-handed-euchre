@@ -54,7 +54,7 @@ export class GameDataResponse {
         numberOfSeats: number,
         canStartGame: boolean,
         hasGameStarted: boolean,
-        seats: Seat[],
+        seats: SeatsResponse[],
         isYourTurn: boolean,
         yourHand: Card[]
     ) {
