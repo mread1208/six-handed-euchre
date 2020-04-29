@@ -59,7 +59,13 @@ const createNewRoom = function(roomId: string, gameName: string): GameData {
     // Send client back massaged data
     return createGame;
 };
-const takeSeat = function(roomId: string, userId: string, userName: string, seatNumber: number): GameDataResponse {
+const takeSeat = function(
+    roomId: string,
+    userId: string,
+    userName: string,
+    socketId: string,
+    seatNumber: number
+): GameDataResponse {
     const gameIndex = games.findIndex(game => game.gameId === roomId);
     const seatIndex = games[gameIndex].seats.findIndex(seat => seat.seatNumber === seatNumber);
     const currentTurnIndex = games[gameIndex].seats.findIndex(seat => seat.isYourTurn);
@@ -84,6 +90,7 @@ const takeSeat = function(roomId: string, userId: string, userName: string, seat
     // Create new seat with user info, add to index.
     games[gameIndex].seats[seatIndex].userId = userId;
     games[gameIndex].seats[seatIndex].userName = userName;
+    games[gameIndex].seats[seatIndex].socketId = socketId;
 
     // Can the game start?
     const numberOfTakenSeats = games[gameIndex].seats.filter(seat => seat.userId !== "").length;
@@ -137,7 +144,7 @@ const leaveSeat = function(roomId: string, userId: string): GameDataResponse {
     );
 };
 
-const startGame = function(roomId: string, userId: string): GameDataResponse {
+const startGame = function(roomId: string, userId: string): GameData {
     const gameIndex = games.findIndex(game => game.gameId === roomId);
     const seatIndex = games[gameIndex].seats.findIndex(seat => seat.userId === userId);
     const newDeck = getDeck();
@@ -168,19 +175,7 @@ const startGame = function(roomId: string, userId: string): GameDataResponse {
         seatsResponse.push(new SeatsResponse(seat.seatNumber, seat.userId, seat.userName, seat.isYourTurn));
     });
 
-    console.log(games[gameIndex].seats);
-    console.log(userId);
-
-    return new GameDataResponse(
-        roomId,
-        games[gameIndex].gameName,
-        games[gameIndex].numberOfSeats,
-        games[gameIndex].canStartGame,
-        games[gameIndex].hasGameStarted,
-        seatsResponse,
-        games[gameIndex].seats[seatIndex].isYourTurn,
-        games[gameIndex].seats[seatIndex].hand
-    );
+    return games[gameIndex];
 };
 
 const takeYourTurn = function(roomId: string, userId: string, seatNumber: number): GameData {
@@ -347,12 +342,11 @@ gamesNamespace.on(`connection`, function(socket) {
     });
     socket.on("getRoomNames", () => {
         // const currentGameRooms = Object.keys(io.of("/games").adapter.rooms).filter(room => room.startsWith("game_"));
-        console.log(games);
         io.emit("getRoomNames", games);
     });
 
     socket.on("takeSeat", (roomId, seatNumber) => {
-        const gameData: GameDataResponse = takeSeat(roomId, socket.userId, socket.username, seatNumber);
+        const gameData: GameDataResponse = takeSeat(roomId, socket.userId, socket.username, socket.id, seatNumber);
         gamesNamespace.emit("getGameData", gameData);
     });
     socket.on("leaveSeat", roomId => {
@@ -360,8 +354,24 @@ gamesNamespace.on(`connection`, function(socket) {
         gamesNamespace.emit("getGameData", gameData);
     });
     socket.on("startGame", roomId => {
-        const gameData: GameDataResponse = startGame(roomId, socket.userId);
-        gamesNamespace.emit("getGameData", gameData);
+        const gameData: GameData = startGame(roomId, socket.userId);
+        const gameDataResponseSeats: SeatsResponse[] = gameData.seats.map(seat => {
+            return new SeatsResponse(seat.seatNumber, seat.userId, seat.userName, seat.isYourTurn);
+        });
+        // Send hands to each user.
+        gameData.seats.forEach(seat => {
+            const seatGameData = new GameDataResponse(
+                roomId,
+                gameData.gameName,
+                gameData.numberOfSeats,
+                gameData.canStartGame,
+                gameData.hasGameStarted,
+                gameDataResponseSeats,
+                seat.isYourTurn,
+                seat.hand
+            );
+            gamesNamespace.to(seat.socketId).emit("getGameData", seatGameData);
+        });
     });
     socket.on("takeYourTurn", (roomId, seatNumber) => {
         const gameData: GameData = takeYourTurn(roomId, socket.userId, seatNumber);

@@ -22,6 +22,7 @@ export class Seat {
     userName: string;
     isYourTurn: boolean;
     hand: Card[];
+    socketId: string;
 
     constructor(seatNumber, userId, userName, isYourTurn, hand) {
         this.seatNumber = seatNumber;
