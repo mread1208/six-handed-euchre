@@ -44,19 +44,6 @@
                             </ion-button>
                         </div>
                     </div>
-                    <!-- <div class="player-hand" *ngIf="gameData?.hasGameStarted && seat?.hand">
-                        <div class="player-hand--cards" *ngFor="let card of seat?.hand">
-                            {{ card.cardValue }} - {{ card.suit }}
-                        </div>
-                    </div> -->
-                    <ion-button
-                        *ngIf="gameData?.hasGameStarted && gameData.isYourTurn"
-                        fill="outline"
-                        type="primary"
-                        (click)="takeYourTurn($event, seat.seatNumber)"
-                    >
-                        Take Your Turn
-                    </ion-button>
                 </div>
             </div>
             <ion-button
@@ -66,6 +53,15 @@
                 type="primary"
             >
                 Start Game
+            </ion-button>
+
+            <ion-button
+                *ngIf="gameData?.hasGameStarted && gameData.isYourTurn"
+                fill="outline"
+                type="primary"
+                (click)="takeYourTurn($event)"
+            >
+                Take Your Turn
             </ion-button>
             <div class="your-cards" *ngIf="gameData?.hasGameStarted">
                 <div class="your-card" *ngFor="let card of gameData.yourHand">

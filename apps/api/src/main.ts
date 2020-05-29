@@ -178,25 +178,26 @@ const startGame = function(roomId: string, userId: string): GameData {
     return games[gameIndex];
 };
 
-const takeYourTurn = function(roomId: string, userId: string, seatNumber: number): GameData {
+const takeYourTurn = function(roomId: string, userId: string): GameData {
     const gameIndex = games.findIndex(game => game.gameId === roomId);
+    const currUserSeat = games[gameIndex].seats.find(seat => seat.userId === userId);
+    const currGame: GameData = games[gameIndex];
 
     // Verify it's actually this player's turn
-    const currentSeatTurnIndex = games[gameIndex].seats.findIndex(seat => seat.seatNumber === seatNumber);
-    if (games[gameIndex].seats[currentSeatTurnIndex].userId !== userId) {
+    const currentSeatTurnIndex = currGame.seats.findIndex(seat => seat.seatNumber === currUserSeat.seatNumber);
+    if (currGame.seats[currentSeatTurnIndex].userId !== userId) {
         // TODO: Return an error!
         console.error("It's not your time breh!");
-        return games[gameIndex];
+        return currGame;
     }
 
     // If last seat in game, then player 1's turn.
-    const nextSeatTurn = seatNumber + 1 > games[gameIndex].seats.length ? 1 : seatNumber + 1;
+    const nextSeatTurn = currUserSeat.seatNumber + 1 > currGame.seats.length ? 1 : currUserSeat.seatNumber + 1;
     // Loop through seats and set player turns
-    for (let p = 0; p < games[gameIndex].seats.length; p++) {
-        games[gameIndex].seats[p].isYourTurn = games[gameIndex].seats[p].seatNumber === nextSeatTurn;
+    for (let p = 0; p < currGame.seats.length; p++) {
+        currGame.seats[p].isYourTurn = currGame.seats[p].seatNumber === nextSeatTurn;
     }
-
-    return games[gameIndex];
+    return currGame;
 };
 
 // Helper functions
@@ -295,7 +296,6 @@ gamesNamespace.on(`connection`, function(socket) {
             gamesNamespace.to(roomId).emit("refreshSocketUserData");
         }
         socket.join(roomId, () => {
-            console.log(socket.username, "joined", roomId);
             const currentGameRooms = Object.keys(io.of("/games").adapter.rooms).filter(room =>
                 room.startsWith("game_")
             );
@@ -373,9 +373,25 @@ gamesNamespace.on(`connection`, function(socket) {
             gamesNamespace.to(seat.socketId).emit("getGameData", seatGameData);
         });
     });
-    socket.on("takeYourTurn", (roomId, seatNumber) => {
-        const gameData: GameData = takeYourTurn(roomId, socket.userId, seatNumber);
-        gamesNamespace.emit("getGameData", gameData);
+    socket.on("takeYourTurn", roomId => {
+        const gameData: GameData = takeYourTurn(roomId, socket.userId);
+        const gameDataResponseSeats: SeatsResponse[] = gameData.seats.map(seat => {
+            return new SeatsResponse(seat.seatNumber, seat.userId, seat.userName, seat.isYourTurn);
+        });
+        // Send hands to each user.
+        gameData.seats.forEach(seat => {
+            const seatGameData = new GameDataResponse(
+                roomId,
+                gameData.gameName,
+                gameData.numberOfSeats,
+                gameData.canStartGame,
+                gameData.hasGameStarted,
+                gameDataResponseSeats,
+                seat.isYourTurn,
+                seat.hand
+            );
+            gamesNamespace.to(seat.socketId).emit("getGameData", seatGameData);
+        });
     });
 
     socket.on(`disconnecting`, function() {
