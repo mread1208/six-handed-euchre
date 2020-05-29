@@ -6,14 +6,18 @@ export class GameData {
     canStartGame: boolean;
     hasGameStarted: boolean;
     deck: any;
+    currentTurn: number;
+    turns: Turns[];
 
-    constructor(gameId, gameName, numberOfSeats, seats, canStartGame, hasGameStarted) {
+    constructor(gameId, gameName, numberOfSeats, seats, canStartGame, hasGameStarted, currentTurn, turns) {
         this.gameId = gameId;
         this.gameName = gameName;
         this.numberOfSeats = numberOfSeats;
         this.seats = seats;
         this.canStartGame = canStartGame;
         this.hasGameStarted = hasGameStarted;
+        this.currentTurn = currentTurn;
+        this.turns = turns;
     }
 }
 export class Seat {
@@ -36,6 +40,25 @@ export class Seat {
 export class Card {
     cardValue: string;
     suit: string;
+}
+
+export class Turns {
+    turnNumber: number;
+    turn: Turn[];
+
+    constructor(turnNumber: number, turn: Turn[]) {
+        this.turnNumber = turnNumber;
+        this.turn = turn;
+    }
+}
+export class Turn {
+    seatNumber: number;
+    card: Card;
+
+    constructor(seatNumber: number, card: Card) {
+        this.seatNumber = seatNumber;
+        this.card = card;
+    }
 }
 
 // Response back to the client, we don't want to expose everything

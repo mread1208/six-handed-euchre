@@ -1,6 +1,6 @@
 import * as express from "express";
 import { Socket } from "socket.io";
-import { GameData, Seat, Card, GameDataResponse, SeatsResponse } from "./app/models/GameData";
+import { GameData, Seat, Card, GameDataResponse, SeatsResponse, Turn, Turns } from "./app/models/GameData";
 
 const config = require("./app/common/config/env.config.js");
 const app = express();
@@ -52,7 +52,8 @@ const games: GameData[] = [];
 const createNewRoom = function(roomId: string, gameName: string): GameData {
     const seat1 = new Seat(1, "", "", false, []);
     const seat2 = new Seat(2, "", "", false, []);
-    const createGame = new GameData(roomId, gameName, 2, [seat1, seat2], false, false);
+    const turns = new Turns(1, []);
+    const createGame = new GameData(roomId, gameName, 2, [seat1, seat2], false, false, 1, [turns]);
 
     // Push game logic to main array
     games.push(createGame);
@@ -180,8 +181,9 @@ const startGame = function(roomId: string, userId: string): GameData {
 
 const takeYourTurn = function(roomId: string, userId: string): GameData {
     const gameIndex = games.findIndex(game => game.gameId === roomId);
-    const currUserSeat = games[gameIndex].seats.find(seat => seat.userId === userId);
     const currGame: GameData = games[gameIndex];
+    const currTurnIndex = currGame.turns.findIndex(turn => turn.turnNumber === currGame.currentTurn);
+    const currUserSeat = currGame.seats.find(seat => seat.userId === userId);
 
     // Verify it's actually this player's turn
     const currentSeatTurnIndex = currGame.seats.findIndex(seat => seat.seatNumber === currUserSeat.seatNumber);
@@ -191,13 +193,44 @@ const takeYourTurn = function(roomId: string, userId: string): GameData {
         return currGame;
     }
 
+    // Add seat and card to the Turn
+    const updateTurn = new Turn(currUserSeat.seatNumber, currUserSeat.hand[0]);
+    currGame.turns[currTurnIndex].turn.push(updateTurn);
+
+    // If turns === seats, the turn is over.
+    if (currGame.turns[currTurnIndex].turn.length === currGame.seats.length) {
+        // Who won the turn?
+        checkTurn(currGame.turns[currTurnIndex]);
+
+        const nextTurnNumber = currGame.currentTurn + 1;
+        const newTurns = new Turns(nextTurnNumber, []);
+        // Set next turn
+        currGame.currentTurn = nextTurnNumber;
+        // Create new turn object
+        currGame.turns.push(newTurns);
+    }
+
     // If last seat in game, then player 1's turn.
     const nextSeatTurn = currUserSeat.seatNumber + 1 > currGame.seats.length ? 1 : currUserSeat.seatNumber + 1;
     // Loop through seats and set player turns
     for (let p = 0; p < currGame.seats.length; p++) {
         currGame.seats[p].isYourTurn = currGame.seats[p].seatNumber === nextSeatTurn;
     }
+
     return currGame;
+};
+
+const checkTurn = function(turns: Turns) {
+    // High card wins
+    const winner = turns.turn.reduce((accumulator, currentValue) =>
+        currentValue.card.cardValue > accumulator.card.cardValue ? currentValue : accumulator
+    );
+    console.log(`turns`);
+    turns.turn.forEach(turn => {
+        console.log(turn);
+    });
+    console.log(`winner`);
+    console.log(winner);
 };
 
 // Helper functions
@@ -230,28 +263,6 @@ function shuffleDeck(deck): Card[] {
     return deck;
 }
 
-// const checkScore = (room, sendMessage = false) => {
-//     let winner = null;
-//     for (const client of room.sockets) {
-//         if (client.score >= NUM_ROUNDS) {
-//             winner = client;
-//             break;
-//         }
-//     }
-
-//     if (winner) {
-//         if (sendMessage) {
-//             for (const client of room.sockets) {
-//                 client.emit("gameOver", client.id === winner.id ? "You won the game!" : "You lost the game :(");
-//             }
-//         }
-
-//         return true;
-//     }
-
-//     return false;
-// };
-
 const io = require(`socket.io`)(server);
 const gamesNamespace = io.of("/games");
 // Socket IO stuff
@@ -281,7 +292,6 @@ gamesNamespace.on(`connection`, function(socket) {
         socket.userId = data.userId;
     });
     socket.on("joinGamesDashboard", () => {
-        const currentGameRooms = Object.keys(io.of("/games").adapter.rooms).filter(room => room.startsWith("game_"));
         gamesNamespace.emit("getRoomNames", games);
     });
     socket.on("createRoom", gameName => {
@@ -296,9 +306,6 @@ gamesNamespace.on(`connection`, function(socket) {
             gamesNamespace.to(roomId).emit("refreshSocketUserData");
         }
         socket.join(roomId, () => {
-            const currentGameRooms = Object.keys(io.of("/games").adapter.rooms).filter(room =>
-                room.startsWith("game_")
-            );
             // Send game data on joining of room
             let gameData = games.find(game => game.gameId === roomId);
             // If game doesn't exist, let's add to the array.
@@ -322,9 +329,6 @@ gamesNamespace.on(`connection`, function(socket) {
     socket.on("leaveRoom", roomId => {
         console.log(socket.username, "left", roomId);
         socket.leave(roomId, () => {
-            const currentGameRooms = Object.keys(io.of("/games").adapter.rooms).filter(room =>
-                room.startsWith("game_")
-            );
             gamesNamespace.emit("getRoomNames", games);
         });
         // Gets a list of all clients in the room
@@ -341,7 +345,6 @@ gamesNamespace.on(`connection`, function(socket) {
         gamesNamespace.emit("getGameData", gameData);
     });
     socket.on("getRoomNames", () => {
-        // const currentGameRooms = Object.keys(io.of("/games").adapter.rooms).filter(room => room.startsWith("game_"));
         io.emit("getRoomNames", games);
     });
 
