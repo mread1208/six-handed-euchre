@@ -53,7 +53,7 @@ const createNewRoom = function(roomId: string, gameName: string): GameData {
     const seat1 = new Seat(1, "", "", false, []);
     const seat2 = new Seat(2, "", "", false, []);
     const turns = new Turns(1, []);
-    const createGame = new GameData(roomId, gameName, 2, [seat1, seat2], false, false, 1, [turns]);
+    const createGame = new GameData(roomId, gameName, 2, [seat1, seat2], false, false, false, 1, [turns]);
 
     // Push game logic to main array
     games.push(createGame);
@@ -83,6 +83,7 @@ const takeSeat = function(
             games[gameIndex].numberOfSeats,
             games[gameIndex].canStartGame,
             games[gameIndex].hasGameStarted,
+            games[gameIndex].isDuringTurn,
             games[gameIndex].seats,
             isYourTurn,
             yourHand
@@ -109,6 +110,7 @@ const takeSeat = function(
         games[gameIndex].numberOfSeats,
         games[gameIndex].canStartGame,
         games[gameIndex].hasGameStarted,
+        games[gameIndex].isDuringTurn,
         seatsResponse,
         isYourTurn,
         yourHand
@@ -139,6 +141,7 @@ const leaveSeat = function(roomId: string, userId: string): GameDataResponse {
         games[gameIndex].numberOfSeats,
         games[gameIndex].canStartGame,
         games[gameIndex].hasGameStarted,
+        games[gameIndex].isDuringTurn,
         seatsResponse,
         false,
         []
@@ -193,14 +196,24 @@ const takeYourTurn = function(roomId: string, userId: string): GameData {
         return currGame;
     }
 
+    // Set game state to "isDuringTurn"
+    currGame.isDuringTurn = true;
+
     // Add seat and card to the Turn
     const updateTurn = new Turn(currUserSeat.seatNumber, currUserSeat.hand[0]);
     currGame.turns[currTurnIndex].turn.push(updateTurn);
 
+    // Remove the card played from the players hand
+    currGame.seats[currentSeatTurnIndex].hand.shift();
+
+    // If last seat in game, then player 1's turn.
+    let nextSeatTurn = currUserSeat.seatNumber + 1 > currGame.seats.length ? 1 : currUserSeat.seatNumber + 1;
+
     // If turns === seats, the turn is over.
     if (currGame.turns[currTurnIndex].turn.length === currGame.seats.length) {
-        // Who won the turn?
-        checkTurn(currGame.turns[currTurnIndex]);
+        const winningHand = endTurn(currGame.turns[currTurnIndex].turn);
+        // Update game state
+        currGame.isDuringTurn = false;
 
         const nextTurnNumber = currGame.currentTurn + 1;
         const newTurns = new Turns(nextTurnNumber, []);
@@ -208,10 +221,10 @@ const takeYourTurn = function(roomId: string, userId: string): GameData {
         currGame.currentTurn = nextTurnNumber;
         // Create new turn object
         currGame.turns.push(newTurns);
+        // Reset nextSeat to the winning hand
+        nextSeatTurn = winningHand.seatNumber;
     }
 
-    // If last seat in game, then player 1's turn.
-    const nextSeatTurn = currUserSeat.seatNumber + 1 > currGame.seats.length ? 1 : currUserSeat.seatNumber + 1;
     // Loop through seats and set player turns
     for (let p = 0; p < currGame.seats.length; p++) {
         currGame.seats[p].isYourTurn = currGame.seats[p].seatNumber === nextSeatTurn;
@@ -220,17 +233,81 @@ const takeYourTurn = function(roomId: string, userId: string): GameData {
     return currGame;
 };
 
-const checkTurn = function(turns: Turns) {
+const endTurn = function(turns: Turn[]): Turn {
     // High card wins
-    const winner = turns.turn.reduce((accumulator, currentValue) =>
-        currentValue.card.cardValue > accumulator.card.cardValue ? currentValue : accumulator
-    );
+    const winner = turns.reduce((accumulator, currentValue) => {
+        if (currentValue.card.cardValue === accumulator.card.cardValue) {
+            // For now, if cards match... first one wins
+            return accumulator;
+        } else if (
+            currentValue.card.cardValue === "A" ||
+            currentValue.card.cardValue === "K" ||
+            currentValue.card.cardValue === "Q" ||
+            currentValue.card.cardValue === "J"
+        ) {
+            // Check face cards
+            if (
+                accumulator.card.cardValue !== "A" &&
+                accumulator.card.cardValue !== "K" &&
+                accumulator.card.cardValue !== "Q" &&
+                accumulator.card.cardValue !== "J"
+            ) {
+                // If prev card is not a face card, new card wins
+                return currentValue;
+            } else {
+                // We already checked matching values
+                // Compare the face cards
+                if (currentValue.card.cardValue === "A" && accumulator.card.cardValue !== "A") {
+                    // Ace always wins
+                    return currentValue;
+                } else if (
+                    currentValue.card.cardValue === "K" &&
+                    accumulator.card.cardValue !== "A" &&
+                    accumulator.card.cardValue !== "K"
+                ) {
+                    return currentValue;
+                } else if (
+                    currentValue.card.cardValue === "Q" &&
+                    accumulator.card.cardValue !== "A" &&
+                    accumulator.card.cardValue !== "K" &&
+                    accumulator.card.cardValue !== "Q"
+                ) {
+                    return currentValue;
+                } else if (
+                    currentValue.card.cardValue === "J" &&
+                    accumulator.card.cardValue !== "A" &&
+                    accumulator.card.cardValue !== "K" &&
+                    accumulator.card.cardValue !== "Q" &&
+                    accumulator.card.cardValue !== "J"
+                ) {
+                    // This state shouldn't happen since we checked to make sure it was a face card.
+                    return currentValue;
+                } else {
+                    return accumulator;
+                }
+            }
+        } else if (
+            accumulator.card.cardValue === "A" ||
+            accumulator.card.cardValue === "K" ||
+            accumulator.card.cardValue === "Q" ||
+            accumulator.card.cardValue === "J"
+        ) {
+            // If accumulator is a face card, and current card isn't... accumulator wins
+            return accumulator;
+        } else {
+            // Higher number wins
+            console.log(`currentValue.card.cardValue: ${currentValue.card.cardValue}.`);
+            console.log(`accumulator.card.cardValue: ${accumulator.card.cardValue}.`);
+            return currentValue.card.cardValue > accumulator.card.cardValue ? currentValue : accumulator;
+        }
+    });
     console.log(`turns`);
-    turns.turn.forEach(turn => {
+    turns.forEach(turn => {
         console.log(turn);
     });
     console.log(`winner`);
     console.log(winner);
+    return winner;
 };
 
 // Helper functions
@@ -369,6 +446,7 @@ gamesNamespace.on(`connection`, function(socket) {
                 gameData.numberOfSeats,
                 gameData.canStartGame,
                 gameData.hasGameStarted,
+                gameData.isDuringTurn,
                 gameDataResponseSeats,
                 seat.isYourTurn,
                 seat.hand
@@ -389,6 +467,7 @@ gamesNamespace.on(`connection`, function(socket) {
                 gameData.numberOfSeats,
                 gameData.canStartGame,
                 gameData.hasGameStarted,
+                gameData.isDuringTurn,
                 gameDataResponseSeats,
                 seat.isYourTurn,
                 seat.hand

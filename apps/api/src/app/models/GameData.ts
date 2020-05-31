@@ -5,17 +5,29 @@ export class GameData {
     seats: Seat[];
     canStartGame: boolean;
     hasGameStarted: boolean;
+    isDuringTurn: boolean;
     deck: any;
     currentTurn: number;
     turns: Turns[];
 
-    constructor(gameId, gameName, numberOfSeats, seats, canStartGame, hasGameStarted, currentTurn, turns) {
+    constructor(
+        gameId,
+        gameName,
+        numberOfSeats,
+        seats,
+        canStartGame,
+        hasGameStarted,
+        isDuringTurn,
+        currentTurn,
+        turns
+    ) {
         this.gameId = gameId;
         this.gameName = gameName;
         this.numberOfSeats = numberOfSeats;
         this.seats = seats;
         this.canStartGame = canStartGame;
         this.hasGameStarted = hasGameStarted;
+        this.isDuringTurn = isDuringTurn;
         this.currentTurn = currentTurn;
         this.turns = turns;
     }
@@ -68,6 +80,7 @@ export class GameDataResponse {
     numberOfSeats: number;
     canStartGame: boolean;
     hasGameStarted: boolean;
+    isDuringTurn: boolean;
     seats: SeatsResponse[];
     isYourTurn: boolean;
     yourHand: Card[];
@@ -78,6 +91,7 @@ export class GameDataResponse {
         numberOfSeats: number,
         canStartGame: boolean,
         hasGameStarted: boolean,
+        isDuringTurn: boolean,
         seats: SeatsResponse[],
         isYourTurn: boolean,
         yourHand: Card[]
@@ -87,6 +101,7 @@ export class GameDataResponse {
         this.numberOfSeats = numberOfSeats;
         this.canStartGame = canStartGame;
         this.hasGameStarted = hasGameStarted;
+        this.isDuringTurn = isDuringTurn;
         this.seats = seats;
         this.isYourTurn = isYourTurn;
         this.yourHand = yourHand;
