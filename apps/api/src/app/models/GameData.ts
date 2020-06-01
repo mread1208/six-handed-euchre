@@ -7,19 +7,17 @@ export class GameData {
     hasGameStarted: boolean;
     isDuringTurn: boolean;
     deck: any;
-    currentTurn: number;
     turns: Turns[];
 
     constructor(
-        gameId,
-        gameName,
-        numberOfSeats,
-        seats,
-        canStartGame,
-        hasGameStarted,
-        isDuringTurn,
-        currentTurn,
-        turns
+        gameId: string,
+        gameName: string,
+        numberOfSeats: number,
+        seats: Seat[],
+        canStartGame: boolean,
+        hasGameStarted: boolean,
+        isDuringTurn: boolean,
+        turns: Turns[]
     ) {
         this.gameId = gameId;
         this.gameName = gameName;
@@ -28,7 +26,6 @@ export class GameData {
         this.canStartGame = canStartGame;
         this.hasGameStarted = hasGameStarted;
         this.isDuringTurn = isDuringTurn;
-        this.currentTurn = currentTurn;
         this.turns = turns;
     }
 }
@@ -55,13 +52,10 @@ export class Card {
     cardValue: string;
     suit: string;
 }
-
 export class Turns {
-    turnNumber: number;
     turn: Turn[];
 
-    constructor(turnNumber: number, turn: Turn[]) {
-        this.turnNumber = turnNumber;
+    constructor(turn: Turn[]) {
         this.turn = turn;
     }
 }

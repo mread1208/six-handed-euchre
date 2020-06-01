@@ -52,8 +52,8 @@ const games: GameData[] = [];
 const createNewRoom = function(roomId: string, gameName: string): GameData {
     const seat1 = new Seat(1, "", "", false, [], 0);
     const seat2 = new Seat(2, "", "", false, [], 0);
-    const turns = new Turns(1, []);
-    const createGame = new GameData(roomId, gameName, 2, [seat1, seat2], false, false, false, 1, [turns]);
+    const turns = new Turns([]);
+    const createGame = new GameData(roomId, gameName, 2, [seat1, seat2], false, false, false, [turns]);
 
     // Push game logic to main array
     games.push(createGame);
@@ -80,6 +80,8 @@ const takeSeat = function(
     const isYourTurn = currentGameSeatTurn === seatNumber;
     const yourHand = currGame.seats[seatIndex].hand;
 
+    const lastTurn = currGame.turns[currGame.turns.length - 1];
+
     // Check to see if user is already in a seat
     if (currGame.seats.find(seat => seat.userId === userId)) {
         console.error("User already in a seat!");
@@ -93,7 +95,8 @@ const takeSeat = function(
             currGame.isDuringTurn,
             currGame.seats,
             isYourTurn,
-            yourHand
+            yourHand,
+            lastTurn
         );
     }
     // Create new seat with user info, add to index.
@@ -108,7 +111,7 @@ const takeSeat = function(
     // Seats for Frontend
     const seatsResponse: SeatsResponse[] = [];
     currGame.seats.forEach(seat => {
-        seatsResponse.push(new SeatsResponse(seat.seatNumber, seat.userId, seat.userName, seat.isYourTurn));
+        seatsResponse.push(new SeatsResponse(seat.seatNumber, seat.userId, seat.userName, seat.isYourTurn, seat.score));
     });
 
     // Update the main game state
@@ -123,7 +126,8 @@ const takeSeat = function(
         currGame.isDuringTurn,
         seatsResponse,
         isYourTurn,
-        yourHand
+        yourHand,
+        lastTurn
     );
 };
 const leaveSeat = function(roomId: string, userId: string): GameDataResponse {
@@ -146,6 +150,8 @@ const leaveSeat = function(roomId: string, userId: string): GameDataResponse {
         seatsResponse.push(new SeatsResponse(seat.seatNumber, seat.userId, seat.userName, seat.isYourTurn, seat.score));
     });
 
+    const lastTurn = currGame.turns[currGame.turns.length - 1];
+
     // Update the main game state
     games[gameIndex] = currGame;
 
@@ -158,7 +164,8 @@ const leaveSeat = function(roomId: string, userId: string): GameDataResponse {
         currGame.isDuringTurn,
         seatsResponse,
         false,
-        []
+        [],
+        lastTurn
     );
 };
 
@@ -202,7 +209,6 @@ const startGame = function(roomId: string, userId: string): GameData {
 const takeYourTurn = function(roomId: string, userId: string): GameData {
     const gameIndex = games.findIndex(game => game.gameId === roomId);
     const currGame: GameData = games[gameIndex];
-    const currTurnIndex = currGame.turns.findIndex(turn => turn.turnNumber === currGame.currentTurn);
     const currUserSeat = currGame.seats.find(seat => seat.userId === userId);
 
     // Verify it's actually this player's turn
@@ -218,7 +224,7 @@ const takeYourTurn = function(roomId: string, userId: string): GameData {
 
     // Add seat and card to the Turn
     const updateTurn = new Turn(currUserSeat.seatNumber, currUserSeat.hand[0]);
-    currGame.turns[currTurnIndex].turn.push(updateTurn);
+    currGame.turns[currGame.turns.length - 1].turn.push(updateTurn);
 
     // Remove the card played from the players hand
     currGame.seats[currentSeatTurnIndex].hand.shift();
@@ -227,15 +233,12 @@ const takeYourTurn = function(roomId: string, userId: string): GameData {
     let nextSeatTurn = currUserSeat.seatNumber + 1 > currGame.seats.length ? 1 : currUserSeat.seatNumber + 1;
 
     // If turns === seats, the turn is over.
-    if (currGame.turns[currTurnIndex].turn.length === currGame.seats.length) {
-        const winningHand = getWinningHand(currGame.turns[currTurnIndex].turn);
+    if (currGame.turns[currGame.turns.length - 1].turn.length === currGame.seats.length) {
+        const winningHand = getWinningHand(currGame.turns[currGame.turns.length - 1].turn);
         // Update game state
         currGame.isDuringTurn = false;
 
-        const nextTurnNumber = currGame.currentTurn + 1;
-        const newTurns = new Turns(nextTurnNumber, []);
-        // Set next turn
-        currGame.currentTurn = nextTurnNumber;
+        const newTurns = new Turns([]);
         // Create new turn object
         currGame.turns.push(newTurns);
         // Reset nextSeat to the winning hand
@@ -468,7 +471,8 @@ gamesNamespace.on(`connection`, function(socket) {
                 gameData.isDuringTurn,
                 gameDataResponseSeats,
                 seat.isYourTurn,
-                seat.hand
+                seat.hand,
+                new Turns([])
             );
             gamesNamespace.to(seat.socketId).emit("getGameData", seatGameData);
         });
