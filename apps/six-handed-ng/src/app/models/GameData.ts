@@ -7,6 +7,7 @@ export class GameData {
     seats: Seat[];
     isYourTurn: boolean;
     yourHand: Card[];
+    currentTurn: Turns;
 
     constructor(
         gameId: string,
@@ -28,13 +29,34 @@ export class GameData {
 export class Seat {
     seatNumber: number;
     userName: string;
+    score: number;
 
-    constructor(seatNumber, userName) {
+    constructor(seatNumber, userName, score) {
         this.seatNumber = seatNumber;
         this.userName = userName;
+        this.score = score;
     }
 }
 export class Card {
     cardValue: string;
     suit: string;
+}
+
+export class Turns {
+    turnNumber: number;
+    turn: Turn[];
+
+    constructor(turnNumber: number, turn: Turn[]) {
+        this.turnNumber = turnNumber;
+        this.turn = turn;
+    }
+}
+export class Turn {
+    seatNumber: number;
+    card: Card;
+
+    constructor(seatNumber: number, card: Card) {
+        this.seatNumber = seatNumber;
+        this.card = card;
+    }
 }

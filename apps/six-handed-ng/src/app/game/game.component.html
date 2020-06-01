@@ -21,6 +21,7 @@
             <div class="seats">
                 <div *ngFor="let seat of gameData?.seats" class="seat">
                     <p>Seat {{ seat.seatNumber }}</p>
+                    <p>Score {{ seat.score }}</p>
                     <ng-container *ngIf="!seat.userName">
                         <p>Waiting for player to join.</p>
                     </ng-container>
@@ -63,6 +64,16 @@
             >
                 Take Your Turn
             </ion-button>
+            <div class="game-board">
+                <div class="game-board--seat" *ngFor="let seat of gameData?.seats">
+                    <ng-container *ngFor="let turn of gameData?.currentTurn?.turn">
+                        <ng-container *ngIf="turn.seatNumber === seat.seatNumber">
+                            <p>{{ turn.card.suit }}</p>
+                            <p>{{ turn.card.cardValue }}</p>
+                        </ng-container>
+                    </ng-container>
+                </div>
+            </div>
             <div class="your-cards" *ngIf="gameData?.hasGameStarted">
                 <div class="your-card" *ngFor="let card of gameData.yourHand">
                     <p>{{ card.suit }}</p>

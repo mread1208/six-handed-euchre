@@ -2,6 +2,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     border: 1px solid gray;
+    margin: 15px 0;
 
     .seat {
         padding: 20px;
@@ -21,8 +22,24 @@
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
     border: 1px solid gray;
+    margin: 15px 0;
 
     .your-card {
         padding: 10px;
+    }
+}
+
+.game-board {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid gray;
+    margin: 15px 0;
+
+    .game-board--seat {
+        padding: 10px;
+
+        &:first-child {
+            border-right: 1px solid gray;
+        }
     }
 }

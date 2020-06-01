@@ -39,13 +39,15 @@ export class Seat {
     isYourTurn: boolean;
     hand: Card[];
     socketId: string;
+    score: number;
 
-    constructor(seatNumber, userId, userName, isYourTurn, hand) {
+    constructor(seatNumber, userId, userName, isYourTurn, hand, score) {
         this.seatNumber = seatNumber;
         this.userId = userId;
         this.userName = userName;
         this.isYourTurn = isYourTurn;
         this.hand = hand;
+        this.score = score;
     }
 }
 
@@ -84,6 +86,7 @@ export class GameDataResponse {
     seats: SeatsResponse[];
     isYourTurn: boolean;
     yourHand: Card[];
+    currentTurn: Turns;
 
     constructor(
         gameId: string,
@@ -94,7 +97,8 @@ export class GameDataResponse {
         isDuringTurn: boolean,
         seats: SeatsResponse[],
         isYourTurn: boolean,
-        yourHand: Card[]
+        yourHand: Card[],
+        currentTurn: Turns
     ) {
         this.gameId = gameId;
         this.gameName = gameName;
@@ -105,6 +109,7 @@ export class GameDataResponse {
         this.seats = seats;
         this.isYourTurn = isYourTurn;
         this.yourHand = yourHand;
+        this.currentTurn = currentTurn;
     }
 }
 
@@ -113,11 +118,13 @@ export class SeatsResponse {
     userId: string;
     userName: string;
     isYourTurn: boolean;
+    score: number;
 
-    constructor(seatNumber, userId, userName, isYourTurn) {
+    constructor(seatNumber, userId, userName, isYourTurn, score) {
         this.seatNumber = seatNumber;
         this.userId = userId;
         this.userName = userName;
         this.isYourTurn = isYourTurn;
+        this.score = score;
     }
 }
