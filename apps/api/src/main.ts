@@ -229,32 +229,21 @@ const takeYourTurn = function(roomId: string, userId: string): GameData {
     // Remove the card played from the players hand
     currGame.seats[currentSeatTurnIndex].hand.shift();
 
-    // If last seat in game, then player 1's turn.
-    let nextSeatTurn = currUserSeat.seatNumber + 1 > currGame.seats.length ? 1 : currUserSeat.seatNumber + 1;
-
     // If turns === seats, the turn is over.
     if (currGame.turns[currGame.turns.length - 1].turn.length === currGame.seats.length) {
-        const winningHand = getWinningHand(currGame.turns[currGame.turns.length - 1].turn);
         // Update game state
         currGame.isDuringTurn = false;
-
-        const newTurns = new Turns([]);
-        // Create new turn object
-        currGame.turns.push(newTurns);
-        // Reset nextSeat to the winning hand
-        nextSeatTurn = winningHand.seatNumber;
-
-        // Loop through seats and update player scores
+        // Loop through seats and set player turns to false
         for (let p = 0; p < currGame.seats.length; p++) {
-            if (currGame.seats[p].seatNumber === winningHand.seatNumber) {
-                currGame.seats[p].score = currGame.seats[p].score + 1;
-            }
+            currGame.seats[p].isYourTurn = false;
         }
-    }
-
-    // Loop through seats and set player turns
-    for (let p = 0; p < currGame.seats.length; p++) {
-        currGame.seats[p].isYourTurn = currGame.seats[p].seatNumber === nextSeatTurn;
+    } else {
+        // If last seat in game, then player 1's turn.
+        const nextSeatTurn = currUserSeat.seatNumber + 1 > currGame.seats.length ? 1 : currUserSeat.seatNumber + 1;
+        // Loop through seats and set player turns
+        for (let j = 0; j < currGame.seats.length; j++) {
+            currGame.seats[j].isYourTurn = currGame.seats[j].seatNumber === nextSeatTurn;
+        }
     }
 
     // Update the main game state
@@ -330,6 +319,33 @@ const getWinningHand = function(turns: Turn[]): Turn {
         }
     });
     return winner;
+};
+
+const endTurn = function(roomId: string): GameData {
+    const gameIndex = games.findIndex(game => game.gameId === roomId);
+    const currGame: GameData = games[gameIndex];
+    const winningHand = getWinningHand(currGame.turns[currGame.turns.length - 1].turn);
+    // Update game state
+    currGame.isDuringTurn = false;
+
+    // Loop through seats and set player turns and score
+    for (let p = 0; p < currGame.seats.length; p++) {
+        if (currGame.seats[p].seatNumber === winningHand.seatNumber) {
+            currGame.seats[p].score = currGame.seats[p].score + 1;
+            currGame.seats[p].isYourTurn = true;
+        } else {
+            currGame.seats[p].isYourTurn = false;
+        }
+    }
+
+    // Create new turn object
+    const newTurns = new Turns([]);
+    currGame.turns.push(newTurns);
+
+    // Update the main game state
+    games[gameIndex] = currGame;
+
+    return currGame;
 };
 
 // Helper functions
@@ -499,6 +515,32 @@ gamesNamespace.on(`connection`, function(socket) {
             );
             gamesNamespace.to(seat.socketId).emit("getGameData", seatGameData);
         });
+        // If turn is over... wait and start the next turn
+        // so that we can see the cards played before cleaning the hand
+        if (!gameData.isDuringTurn) {
+            setTimeout(() => {
+                const nextTurnGameData = endTurn(roomId);
+                const endTurnGameDataResponseSeats: SeatsResponse[] = gameData.seats.map(seat => {
+                    return new SeatsResponse(seat.seatNumber, seat.userId, seat.userName, seat.isYourTurn, seat.score);
+                });
+                // Send hands to each user.
+                gameData.seats.forEach(seat => {
+                    const seatGameData = new GameDataResponse(
+                        roomId,
+                        nextTurnGameData.gameName,
+                        nextTurnGameData.numberOfSeats,
+                        nextTurnGameData.canStartGame,
+                        nextTurnGameData.hasGameStarted,
+                        nextTurnGameData.isDuringTurn,
+                        endTurnGameDataResponseSeats,
+                        seat.isYourTurn,
+                        seat.hand,
+                        nextTurnGameData.turns[gameData.turns.length - 1]
+                    );
+                    gamesNamespace.to(seat.socketId).emit("getGameData", seatGameData);
+                });
+            }, 2000);
+        }
     });
 
     socket.on(`disconnecting`, function() {
