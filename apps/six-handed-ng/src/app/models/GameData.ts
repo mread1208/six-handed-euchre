@@ -2,27 +2,18 @@ export class GameData {
     gameId: string;
     gameName: string;
     numberOfSeats: number;
-    canStartGame: boolean;
-    hasGameStarted: boolean;
+    gameState: GameState;
     seats: Seat[];
     isYourTurn: boolean;
     yourHand: Card[];
     currentTurn: Turns;
 
-    constructor(
-        gameId: string,
-        gameName: string,
-        numberOfSeats: number,
-        canStartGame: boolean,
-        hasGameStarted: boolean,
-        seats: Seat[]
-    ) {
+    constructor(gameId: string, gameName: string, numberOfSeats: number, gameState: GameState, seats: Seat[]) {
         this.gameId = gameId;
         this.gameName = gameName;
         this.numberOfSeats = numberOfSeats;
         this.seats = seats;
-        this.canStartGame = canStartGame;
-        this.hasGameStarted = hasGameStarted;
+        this.gameState = gameState;
     }
 }
 
@@ -43,12 +34,12 @@ export class Card {
 }
 
 export class Turns {
-    turnNumber: number;
     turn: Turn[];
+    turnState: TurnState;
 
-    constructor(turnNumber: number, turn: Turn[]) {
-        this.turnNumber = turnNumber;
+    constructor(turn: Turn[], turnState: TurnState) {
         this.turn = turn;
+        this.turnState = turnState;
     }
 }
 export class Turn {
@@ -59,4 +50,17 @@ export class Turn {
         this.seatNumber = seatNumber;
         this.card = card;
     }
+}
+
+export enum GameState {
+    GAME_WAITING_PLAYERS,
+    GAME_WAITING_START,
+    GAME_IN_PROGRESS,
+    GAME_END,
+}
+
+export enum TurnState {
+    TURN_WAITING_START,
+    TURN_IN_PROGRESS,
+    TURN_END,
 }

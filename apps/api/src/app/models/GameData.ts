@@ -3,9 +3,7 @@ export class GameData {
     gameName: string;
     numberOfSeats: number;
     seats: Seat[];
-    canStartGame: boolean;
-    hasGameStarted: boolean;
-    isDuringTurn: boolean;
+    gameState: GameState;
     deck: any;
     turns: Turns[];
 
@@ -14,18 +12,14 @@ export class GameData {
         gameName: string,
         numberOfSeats: number,
         seats: Seat[],
-        canStartGame: boolean,
-        hasGameStarted: boolean,
-        isDuringTurn: boolean,
+        gameState: GameState,
         turns: Turns[]
     ) {
         this.gameId = gameId;
         this.gameName = gameName;
         this.numberOfSeats = numberOfSeats;
         this.seats = seats;
-        this.canStartGame = canStartGame;
-        this.hasGameStarted = hasGameStarted;
-        this.isDuringTurn = isDuringTurn;
+        this.gameState = gameState;
         this.turns = turns;
     }
 }
@@ -54,9 +48,11 @@ export class Card {
 }
 export class Turns {
     turn: Turn[];
+    turnState: TurnState;
 
-    constructor(turn: Turn[]) {
+    constructor(turn: Turn[], turnState: TurnState) {
         this.turn = turn;
+        this.turnState = turnState;
     }
 }
 export class Turn {
@@ -69,14 +65,25 @@ export class Turn {
     }
 }
 
+export enum GameState {
+    GAME_WAITING_PLAYERS,
+    GAME_WAITING_START,
+    GAME_IN_PROGRESS,
+    GAME_END,
+}
+
+export enum TurnState {
+    TURN_WAITING_START,
+    TURN_IN_PROGRESS,
+    TURN_END,
+}
+
 // Response back to the client, we don't want to expose everything
 export class GameDataResponse {
     gameId: string;
     gameName: string;
     numberOfSeats: number;
-    canStartGame: boolean;
-    hasGameStarted: boolean;
-    isDuringTurn: boolean;
+    gameState: GameState;
     seats: SeatsResponse[];
     isYourTurn: boolean;
     yourHand: Card[];
@@ -86,9 +93,7 @@ export class GameDataResponse {
         gameId: string,
         gameName: string,
         numberOfSeats: number,
-        canStartGame: boolean,
-        hasGameStarted: boolean,
-        isDuringTurn: boolean,
+        gameState: GameState,
         seats: SeatsResponse[],
         isYourTurn: boolean,
         yourHand: Card[],
@@ -97,9 +102,7 @@ export class GameDataResponse {
         this.gameId = gameId;
         this.gameName = gameName;
         this.numberOfSeats = numberOfSeats;
-        this.canStartGame = canStartGame;
-        this.hasGameStarted = hasGameStarted;
-        this.isDuringTurn = isDuringTurn;
+        this.gameState = gameState;
         this.seats = seats;
         this.isYourTurn = isYourTurn;
         this.yourHand = yourHand;

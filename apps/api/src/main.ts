@@ -1,6 +1,16 @@
 import * as express from "express";
 import { Socket } from "socket.io";
-import { GameData, Seat, Card, GameDataResponse, SeatsResponse, Turn, Turns } from "./app/models/GameData";
+import {
+    GameData,
+    Seat,
+    Card,
+    GameDataResponse,
+    SeatsResponse,
+    Turn,
+    Turns,
+    GameState,
+    TurnState,
+} from "./app/models/GameData";
 
 const config = require("./app/common/config/env.config.js");
 const app = express();
@@ -52,8 +62,8 @@ const games: GameData[] = [];
 const createNewRoom = function(roomId: string, gameName: string): GameData {
     const seat1 = new Seat(1, "", "", false, [], 0);
     const seat2 = new Seat(2, "", "", false, [], 0);
-    const turns = new Turns([]);
-    const createGame = new GameData(roomId, gameName, 2, [seat1, seat2], false, false, false, [turns]);
+    const turns = new Turns([], TurnState.TURN_WAITING_START);
+    const createGame = new GameData(roomId, gameName, 2, [seat1, seat2], GameState.GAME_WAITING_PLAYERS, [turns]);
 
     // Push game logic to main array
     games.push(createGame);
@@ -90,9 +100,7 @@ const takeSeat = function(
             roomId,
             currGame.gameName,
             currGame.numberOfSeats,
-            currGame.canStartGame,
-            currGame.hasGameStarted,
-            currGame.isDuringTurn,
+            currGame.gameState,
             currGame.seats,
             isYourTurn,
             yourHand,
@@ -106,7 +114,8 @@ const takeSeat = function(
 
     // Can the game start?
     const numberOfTakenSeats = currGame.seats.filter(seat => seat.userId !== "").length;
-    currGame.canStartGame = currGame.seats.length === numberOfTakenSeats;
+    currGame.gameState =
+        currGame.seats.length === numberOfTakenSeats ? GameState.GAME_WAITING_START : GameState.GAME_WAITING_PLAYERS;
 
     // Seats for Frontend
     const seatsResponse: SeatsResponse[] = [];
@@ -121,9 +130,7 @@ const takeSeat = function(
         roomId,
         currGame.gameName,
         currGame.numberOfSeats,
-        currGame.canStartGame,
-        currGame.hasGameStarted,
-        currGame.isDuringTurn,
+        currGame.gameState,
         seatsResponse,
         isYourTurn,
         yourHand,
@@ -141,8 +148,10 @@ const leaveSeat = function(roomId: string, userId: string): GameDataResponse {
         currGame.seats[seatIndex].userName = "";
     }
 
+    // Can the game start?
     const numberOfTakenSeats = currGame.seats.filter(seat => seat.userId !== "").length;
-    currGame.canStartGame = currGame.seats.length === numberOfTakenSeats;
+    currGame.gameState =
+        currGame.seats.length === numberOfTakenSeats ? GameState.GAME_WAITING_START : GameState.GAME_WAITING_PLAYERS;
 
     // Seats for Frontend
     const seatsResponse: SeatsResponse[] = [];
@@ -159,9 +168,7 @@ const leaveSeat = function(roomId: string, userId: string): GameDataResponse {
         roomId,
         currGame.gameName,
         currGame.numberOfSeats,
-        currGame.canStartGame,
-        currGame.hasGameStarted,
-        currGame.isDuringTurn,
+        currGame.gameState,
         seatsResponse,
         false,
         [],
@@ -175,7 +182,7 @@ const startGame = function(roomId: string, userId: string): GameData {
     const newDeck = getDeck();
     const newShuffledDeck: Card[] = shuffleDeck(newDeck);
 
-    currGame.hasGameStarted = true;
+    currGame.gameState = GameState.GAME_IN_PROGRESS;
     currGame.deck = newShuffledDeck;
 
     // distribute the shuffled deck evenly amongst players
@@ -210,6 +217,7 @@ const takeYourTurn = function(roomId: string, userId: string): GameData {
     const gameIndex = games.findIndex(game => game.gameId === roomId);
     const currGame: GameData = games[gameIndex];
     const currUserSeat = currGame.seats.find(seat => seat.userId === userId);
+    const currTurn = currGame.turns[currGame.turns.length - 1];
 
     // Verify it's actually this player's turn
     const currentSeatTurnIndex = currGame.seats.findIndex(seat => seat.seatNumber === currUserSeat.seatNumber);
@@ -219,20 +227,17 @@ const takeYourTurn = function(roomId: string, userId: string): GameData {
         return currGame;
     }
 
-    // Set game state to "isDuringTurn"
-    currGame.isDuringTurn = true;
-
     // Add seat and card to the Turn
     const updateTurn = new Turn(currUserSeat.seatNumber, currUserSeat.hand[0]);
-    currGame.turns[currGame.turns.length - 1].turn.push(updateTurn);
+    currTurn.turnState = TurnState.TURN_IN_PROGRESS;
+    currTurn.turn.push(updateTurn);
 
     // Remove the card played from the players hand
     currGame.seats[currentSeatTurnIndex].hand.shift();
 
     // If turns === seats, the turn is over.
-    if (currGame.turns[currGame.turns.length - 1].turn.length === currGame.seats.length) {
-        // Update game state
-        currGame.isDuringTurn = false;
+    if (currTurn.turn.length === currGame.seats.length) {
+        currTurn.turnState = TurnState.TURN_END;
         // Loop through seats and set player turns to false
         for (let p = 0; p < currGame.seats.length; p++) {
             currGame.seats[p].isYourTurn = false;
@@ -324,22 +329,29 @@ const getWinningHand = function(turns: Turn[]): Turn {
 const endTurn = function(roomId: string): GameData {
     const gameIndex = games.findIndex(game => game.gameId === roomId);
     const currGame: GameData = games[gameIndex];
-    const winningHand = getWinningHand(currGame.turns[currGame.turns.length - 1].turn);
-    // Update game state
-    currGame.isDuringTurn = false;
+    const currentTurn = currGame.turns[currGame.turns.length - 1];
+    const winningHand = getWinningHand(currentTurn.turn);
+
+    // Should be set already... but meh.
+    currentTurn.turnState = TurnState.TURN_END;
 
     // Loop through seats and set player turns and score
     for (let p = 0; p < currGame.seats.length; p++) {
         if (currGame.seats[p].seatNumber === winningHand.seatNumber) {
             currGame.seats[p].score = currGame.seats[p].score + 1;
             currGame.seats[p].isYourTurn = true;
+            // Add turn cards to the winning hand
+            currentTurn.turn.forEach(turn => {
+                currGame.seats[p].hand.push(turn.card);
+            });
         } else {
             currGame.seats[p].isYourTurn = false;
+            currGame.gameState = currGame.seats[p].hand.length > 0 ? GameState.GAME_IN_PROGRESS : GameState.GAME_END;
         }
     }
 
     // Create new turn object
-    const newTurns = new Turns([]);
+    const newTurns = new Turns([], TurnState.TURN_WAITING_START);
     currGame.turns.push(newTurns);
 
     // Update the main game state
@@ -350,7 +362,7 @@ const endTurn = function(roomId: string): GameData {
 
 // Helper functions
 const suits = ["spades", "diamonds", "clubs", "hearts"];
-const values = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+const values = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
 function getDeck(): Card[] {
     const deck: Card[] = new Array();
 
@@ -383,20 +395,6 @@ const gamesNamespace = io.of("/games");
 // Socket IO stuff
 io.on(`connection`, function(socket) {
     console.log("a user connected to the main namespace");
-    /**
-     * Lets us know that players have joined a room and are waiting in the waiting room.
-     */
-    // socket.on("ready", () => {
-    //     console.log(socket.id, "is ready!");
-    //     const room = rooms[socket.roomId];
-    //     // when we have two players... START THE GAME!
-    //     if (room.sockets.length == 2) {
-    //         // tell each player to start the game.
-    //         for (const client of room.sockets) {
-    //             client.emit("initGame");
-    //         }
-    //     }
-    // });
 });
 
 gamesNamespace.on(`connection`, function(socket) {
@@ -482,13 +480,11 @@ gamesNamespace.on(`connection`, function(socket) {
                 roomId,
                 gameData.gameName,
                 gameData.numberOfSeats,
-                gameData.canStartGame,
-                gameData.hasGameStarted,
-                gameData.isDuringTurn,
+                gameData.gameState,
                 gameDataResponseSeats,
                 seat.isYourTurn,
                 seat.hand,
-                new Turns([])
+                new Turns([], TurnState.TURN_WAITING_START)
             );
             gamesNamespace.to(seat.socketId).emit("getGameData", seatGameData);
         });
@@ -505,9 +501,7 @@ gamesNamespace.on(`connection`, function(socket) {
                 roomId,
                 gameData.gameName,
                 gameData.numberOfSeats,
-                gameData.canStartGame,
-                gameData.hasGameStarted,
-                gameData.isDuringTurn,
+                gameData.gameState,
                 gameDataResponseSeats,
                 seat.isYourTurn,
                 seat.hand,
@@ -517,7 +511,7 @@ gamesNamespace.on(`connection`, function(socket) {
         });
         // If turn is over... wait and start the next turn
         // so that we can see the cards played before cleaning the hand
-        if (!gameData.isDuringTurn) {
+        if (lastTurn.turnState === TurnState.TURN_END) {
             setTimeout(() => {
                 const nextTurnGameData = endTurn(roomId);
                 const endTurnGameDataResponseSeats: SeatsResponse[] = gameData.seats.map(seat => {
@@ -529,9 +523,7 @@ gamesNamespace.on(`connection`, function(socket) {
                         roomId,
                         nextTurnGameData.gameName,
                         nextTurnGameData.numberOfSeats,
-                        nextTurnGameData.canStartGame,
-                        nextTurnGameData.hasGameStarted,
-                        nextTurnGameData.isDuringTurn,
+                        nextTurnGameData.gameState,
                         endTurnGameDataResponseSeats,
                         seat.isYourTurn,
                         seat.hand,

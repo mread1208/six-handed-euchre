@@ -18,68 +18,79 @@
             <ul>
                 <li *ngFor="let player of players">{{ player }}</li>
             </ul>
-            <div class="seats">
-                <div *ngFor="let seat of gameData?.seats" class="seat">
-                    <p>Seat {{ seat.seatNumber }}</p>
-                    <p>Score {{ seat.score }}</p>
-                    <ng-container *ngIf="!seat.userName">
-                        <p>Waiting for player to join.</p>
-                    </ng-container>
-                    <ng-container *ngIf="!seat.userName && !hasTakenSeat">
-                        <ion-button type="primary" (click)="takeSeat($event, seat.seatNumber)">
-                            Join Seat {{ seat.seatNumber }}
-                        </ion-button>
-                    </ng-container>
-                    <div class="seat--player-info" *ngIf="seat.userName">
-                        <div class="seat--player-info--name">
-                            <p>Player: {{ seat.userName }}</p>
-                        </div>
-                        <div class="seat--player-info--leave">
-                            <ion-button
-                                *ngIf="seat.userName === currentUser.name"
-                                fill="outline"
-                                type="primary"
-                                (click)="leaveSeat()"
-                            >
-                                Leave Seat {{ seat.seatNumber }}
+            <ng-container *ngIf="gameData?.gameState !== getGameState.GAME_END">
+                <div class="seats">
+                    <div *ngFor="let seat of gameData?.seats" class="seat">
+                        <p>Seat {{ seat.seatNumber }}</p>
+                        <p>Score {{ seat.score }}</p>
+                        <ng-container *ngIf="!seat.userName">
+                            <p>Waiting for player to join.</p>
+                        </ng-container>
+                        <ng-container *ngIf="!seat.userName && !hasTakenSeat">
+                            <ion-button type="primary" (click)="takeSeat($event, seat.seatNumber)">
+                                Join Seat {{ seat.seatNumber }}
                             </ion-button>
+                        </ng-container>
+                        <div class="seat--player-info" *ngIf="seat.userName">
+                            <div class="seat--player-info--name">
+                                <p>Player: {{ seat.userName }}</p>
+                            </div>
+                            <div class="seat--player-info--leave">
+                                <ion-button
+                                    *ngIf="seat.userName === currentUser.name"
+                                    fill="outline"
+                                    type="primary"
+                                    (click)="leaveSeat()"
+                                >
+                                    Leave Seat {{ seat.seatNumber }}
+                                </ion-button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <ion-button
-                (click)="startGame($event)"
-                *ngIf="gameData?.canStartGame && !gameData?.hasGameStarted"
-                expand="block"
-                type="primary"
-            >
-                Start Game
-            </ion-button>
+                <ion-button
+                    (click)="startGame($event)"
+                    *ngIf="gameData?.gameState === getGameState.GAME_WAITING_START"
+                    expand="block"
+                    type="primary"
+                >
+                    Start Game
+                </ion-button>
 
-            <ion-button
-                *ngIf="gameData?.hasGameStarted && gameData.isYourTurn"
-                fill="outline"
-                type="primary"
-                (click)="takeYourTurn($event)"
-            >
-                Take Your Turn
-            </ion-button>
-            <div class="game-board">
-                <div class="game-board--seat" *ngFor="let seat of gameData?.seats">
-                    <ng-container *ngFor="let turn of gameData?.currentTurn?.turn">
-                        <ng-container *ngIf="turn.seatNumber === seat.seatNumber">
-                            <p>{{ turn.card.suit }}</p>
-                            <p>{{ turn.card.cardValue }}</p>
+                <ion-button
+                    *ngIf="gameData?.gameState === getGameState.GAME_IN_PROGRESS && gameData.isYourTurn"
+                    fill="outline"
+                    type="primary"
+                    (click)="takeYourTurn($event)"
+                >
+                    Take Your Turn
+                </ion-button>
+                <div class="game-board">
+                    <div class="game-board--seat" *ngFor="let seat of gameData?.seats">
+                        <ng-container *ngFor="let turn of gameData?.currentTurn?.turn">
+                            <ng-container *ngIf="turn.seatNumber === seat.seatNumber">
+                                <p>{{ turn.card.suit }}</p>
+                                <p>{{ turn.card.cardValue }}</p>
+                            </ng-container>
                         </ng-container>
-                    </ng-container>
+                    </div>
                 </div>
-            </div>
-            <div class="your-cards" *ngIf="gameData?.hasGameStarted">
-                <div class="your-card" *ngFor="let card of gameData.yourHand">
-                    <p>{{ card.suit }}</p>
-                    <p>{{ card.cardValue }}</p>
+                <div class="your-cards" *ngIf="gameData?.gameState === getGameState.GAME_IN_PROGRESS">
+                    <div class="your-card" *ngFor="let card of gameData.yourHand">
+                        <p>{{ card.suit }}</p>
+                        <p>{{ card.cardValue }}</p>
+                    </div>
                 </div>
-            </div>
+            </ng-container>
+            <ng-container *ngIf="gameData?.gameState === getGameState.GAME_END">
+                <h1>GG Well Played</h1>
+                <ul>
+                    <li *ngFor="let seat of gameData?.seats">
+                        <p>Score {{ seat.userName }}</p>
+                        <p>Score {{ seat.score }}</p>
+                    </li>
+                </ul>
+            </ng-container>
         </ion-card-content>
     </ion-card>
     <ion-button color="secondary" fill="clear" routerLink="/games" (click)="leaveSeat()">

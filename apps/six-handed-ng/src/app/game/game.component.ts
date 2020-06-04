@@ -5,7 +5,7 @@ import { Subscription } from "rxjs";
 import { GamesService } from "../games/games.service";
 import { AuthService } from "./../auth/auth.service";
 import { User } from "../models/User";
-import { GameData } from "../models/GameData";
+import { GameData, GameState } from "../models/GameData";
 
 @Component({
     selector: "six-handed-euchre-game",
@@ -68,5 +68,9 @@ export class GameComponent implements OnInit, OnDestroy {
     public takeYourTurn(event) {
         event.preventDefault();
         this.gamesService.takeYourTurn(this.gameData.gameId);
+    }
+
+    public get getGameState() {
+        return GameState;
     }
 }
