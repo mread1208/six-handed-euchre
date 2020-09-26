@@ -12,7 +12,7 @@ import {
     TurnState,
 } from "./app/models/GameData";
 
-const config = require("./app/common/config/env.config.js");
+const config = require("./app/common/config/env.config");
 const app = express();
 const bodyParser = require("body-parser");
 const uuid = require("uuid/v1");
