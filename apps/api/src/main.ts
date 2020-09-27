@@ -1,5 +1,6 @@
 import * as express from "express";
 import { Socket } from "socket.io";
+import { config } from "./app/common/config/env.config";
 import {
     GameData,
     Seat,
@@ -12,7 +13,6 @@ import {
     TurnState,
 } from "./app/models/GameData";
 
-const config = require("./app/common/config/env.config");
 const app = express();
 const bodyParser = require("body-parser");
 const uuid = require("uuid/v1");

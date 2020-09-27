@@ -1,4 +1,4 @@
-module.exports = {
+export const config = {
     port: 3333,
     appEndpoint: "http://localhost:3333",
     apiEndpoint: "http://localhost:3333",

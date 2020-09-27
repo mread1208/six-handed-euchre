@@ -1,7 +1,7 @@
-const mongoose = require("../../common/services/mongoose.service").mongoose;
-const Schema = mongoose.Schema;
+const usersMongoose = require("../../common/services/mongoose.service").mongoose;
+const usersSchema = usersMongoose.Schema;
 
-const userSchema = new Schema({
+const userSchema = new usersSchema({
     firstName: String,
     lastName: String,
     email: String,
@@ -22,7 +22,7 @@ userSchema.findById = function(cb) {
     return this.model("Users").find({ id: this.id }, cb);
 };
 
-const User = mongoose.model("Users", userSchema);
+const User = usersMongoose.model("Users", userSchema);
 
 exports.findByEmail = email => {
     return User.find({ email: email });
