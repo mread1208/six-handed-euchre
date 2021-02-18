@@ -1,6 +1,4 @@
-import * as express from "express";
-import { Socket } from "socket.io";
-import { config } from "./app/common/config/env.config";
+// import { Socket } from "socket.io";
 import {
     GameData,
     Seat,
@@ -12,19 +10,33 @@ import {
     GameState,
     TurnState,
 } from "./app/models/GameData";
+// import { config } from "./app/common/config/env.config";
 
-const app = express();
-const bodyParser = require("body-parser");
+import * as express from "express";
+import * as bodyParser from "body-parser";
 const uuid = require("uuid/v1");
+const app = express();
+const user = require("./routes/user");
+// const InitiateMongoServer = require("./config/db");
+// OLD
+// const AuthorizationRouter = require("./app/authorization/routes.config");
+// const UsersRouter = require("./app/users/routes.config");
+// const GamesRouter = require("./app/games/routes.config");
+// END OLD
 
-const AuthorizationRouter = require("./app/authorization/routes.config");
-const UsersRouter = require("./app/users/routes.config");
-const GamesRouter = require("./app/games/routes.config");
+// Initiate Mongo Server
+// InitiateMongoServer();
+
+const port = process.env.port || 3333;
+
+// Middleware
+app.use(bodyParser.json());
 
 app.get("/api", (req, res) => {
     res.send({ message: "Welcome to api!" });
 });
 
+// Headers
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Credentials", "true");
@@ -38,17 +50,24 @@ app.use(function(req, res, next) {
     }
 });
 
-app.use(bodyParser.json());
-AuthorizationRouter.routesConfig(app);
-UsersRouter.routesConfig(app);
-GamesRouter.routesConfig(app);
-
 // route for handling 404 requests(unavailable routes)
 app.use(function(req, res, next) {
     res.status(404).send(`Sorry can't find that!`);
 });
 
-const port = process.env.port || 3333;
+/**
+ * Router Middleware
+ * Router - /user/*
+ * Method - *
+ */
+app.use("/user", user);
+
+// OLD
+// AuthorizationRouter.routesConfig(app);
+// UsersRouter.routesConfig(app);
+// GamesRouter.routesConfig(app);
+// END OLD
+
 const server = app.listen(port, () => {
     console.log(`Listening at http://localhost:${port}/api`);
 });
