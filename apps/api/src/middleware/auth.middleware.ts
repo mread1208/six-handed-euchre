@@ -14,7 +14,9 @@ async function authMiddleware(request: RequestWithUser, response: Response, next
         const verificationResponse = jwt.verify(authToken, secret) as DataStoredInToken;
         const id = verificationResponse._id;
         const user = await userModel.findById(id);
-        if (user) {
+        // Only get user data if the JWT User ID matches the Request
+        // Prevents User A from getting User B data
+        if (user && request.params["id"] === id) {
           request.user = user;
           next();
         } else {
