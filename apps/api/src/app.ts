@@ -1,6 +1,7 @@
 import * as express from "express";
 import * as mongoose from "mongoose";
 import * as bodyParser from "body-parser";
+import errorMiddleware from "./middleware/error.middleware";
 
 const mongooseOptions = {
     autoIndex: false, // Don't build indexes
@@ -21,6 +22,7 @@ class App {
         this.connectToTheDatabase();
         this.initializeMiddlewares();
         this.initializeControllers(controllers);
+        this.initializeErrorHandling();
     }
 
     public listen() {
@@ -31,6 +33,10 @@ class App {
 
     private initializeMiddlewares() {
         this.app.use(bodyParser.json());
+    }
+
+    private initializeErrorHandling() {
+        this.app.use(errorMiddleware);
     }
 
     private initializeControllers(controllers) {
