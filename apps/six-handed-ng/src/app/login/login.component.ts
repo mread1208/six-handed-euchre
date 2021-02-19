@@ -56,7 +56,7 @@ export class LoginComponent implements OnInit {
             .login(email, password)
             .pipe(first())
             .subscribe(
-                data => {
+                () => {
                     this.router.navigate([this.returnUrl]);
                 },
                 error => {

@@ -25,7 +25,7 @@ class AuthenticationController implements Controller {
 
   private initializeRoutes() {
     this.router.post(`${this.path}/register`, validationMiddleware(CreateUserDto), this.registration);
-    this.router.post(`${this.path}/login`, validationMiddleware(LogInDto), this.loggingIn);
+    this.router.get(`${this.path}/login`, this.loggingIn);
   }
 
   private registration = async (request: Request, response: Response, next: NextFunction) => {
@@ -45,7 +45,11 @@ class AuthenticationController implements Controller {
   }
 
   private loggingIn = async (request: Request, response: Response, next: NextFunction) => {
-    const logInData: LogInDto = request.body;
+    // Get the Auth Header (Base64 encoded)
+    const b64auth = (request.headers.authorization || '').split(' ')[1] || '';
+    // Parse into variables
+    const [email, password] = Buffer.from(b64auth, 'base64').toString().split(':')
+    const logInData: LogInDto = {email, password}
     const user = await this.user.findOne({ email: logInData.email });
     if (user) {
       const isPasswordMatching = await bcrypt.compare(
