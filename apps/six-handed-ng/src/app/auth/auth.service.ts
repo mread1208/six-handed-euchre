@@ -3,7 +3,9 @@ import { HttpClient } from "@angular/common/http";
 import { BehaviorSubject, Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { User } from "./../models/User";
+import { environment } from "./../../environments/environment";
 
+const authorizationTokenHeader = "Authorization";
 @Injectable({
     providedIn: "root",
 })
@@ -22,7 +24,7 @@ export class AuthService {
 
     login(email: string, password: string) {
         return this.http
-            .post<User>(`/api/auth`, { email, password })
+            .post<User>(`${environment.API_ENDPOINT}/auth/login`, { email, password })
             .pipe(
                 map(user => {
                     // store user details and jwt token in local storage to keep user logged in between page refreshes
@@ -37,5 +39,10 @@ export class AuthService {
         // remove user from local storage to log user out
         localStorage.removeItem("currentUser");
         this.currentUserSubject.next(null);
+    }
+
+    // New login flow
+    public getAuthToken(): string {
+        return localStorage.getItem(authorizationTokenHeader);
     }
 }

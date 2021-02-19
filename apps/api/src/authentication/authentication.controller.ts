@@ -26,17 +26,16 @@ class AuthenticationController implements Controller {
   private initializeRoutes() {
     this.router.post(`${this.path}/register`, validationMiddleware(CreateUserDto), this.registration);
     this.router.post(`${this.path}/login`, validationMiddleware(LogInDto), this.loggingIn);
-    this.router.post(`${this.path}/logout`, this.loggingOut);
   }
 
   private registration = async (request: Request, response: Response, next: NextFunction) => {
     const userData: CreateUserDto = request.body;
     try {
       const {
-        cookie,
+        tokenData,
         user,
       } = await this.authenticationService.register(userData);
-      response.setHeader('Set-Cookie', [cookie]);
+      response.setHeader('Authorization-Token', tokenData.token);
       // Don't send the password back with the response!
       user.password = undefined;
       response.send(user);
@@ -55,25 +54,16 @@ class AuthenticationController implements Controller {
       );
       if (isPasswordMatching) {
         const tokenData = this.createToken(user);
-        response.status(201).send({
-          accessToken: tokenData.token,
-          email: user.email,
-        });
+        response.setHeader('Authorization-Token', tokenData.token);
+        // Don't send the password back with the response!
+        user.password = undefined;
+        response.status(201).send(user);
       } else {
         next(new WrongCredentialsException());
       }
     } else {
       next(new WrongCredentialsException());
     }
-  }
-
-  private loggingOut = (request: Request, response: Response) => {
-    response.setHeader('Set-Cookie', ['Authorization=;Max-age=0']);
-    response.send(200);
-  }
-
-  private createCookie(tokenData: TokenData) {
-    return `Authorization=${tokenData.token}; HttpOnly; Max-Age=${tokenData.expiresIn}`;
   }
 
   private createToken(user: User): TokenData {

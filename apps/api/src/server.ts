@@ -7,4 +7,4 @@ import AuthenticationController from "./authentication/authentication.controller
 // Validate configs
 validateEnv();
 const app = new App([new UserController(), new AuthenticationController()]);
-app.listen();
+const server = app.listen();

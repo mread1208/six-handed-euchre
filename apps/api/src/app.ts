@@ -1,5 +1,4 @@
 import * as bodyParser from 'body-parser';
-import * as cookieParser from 'cookie-parser';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import Controller from './interfaces/controller.interface';
@@ -22,6 +21,7 @@ class App {
 
     this.connectToTheDatabase();
     this.initializeMiddlewares();
+    this.initializeCorsHeaders();
     this.initializeControllers(controllers);
     this.initializeErrorHandling();
   }
@@ -38,7 +38,6 @@ class App {
 
   private initializeMiddlewares() {
     this.app.use(bodyParser.json());
-    this.app.use(cookieParser());
   }
 
   private initializeErrorHandling() {
@@ -47,7 +46,7 @@ class App {
   private initializeCorsHeaders() {
     // Headers
     this.app.use(function(req, res, next) {
-        res.header("Access-Control-Allow-Origin", "*");
+        res.header("Access-Control-Allow-Origin", "http://localhost:4200");
         res.header("Access-Control-Allow-Credentials", "true");
         res.header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE");
         res.header("Access-Control-Expose-Headers", "Content-Length");

@@ -7,22 +7,18 @@ import RequestWithUser from '../interfaces/requestWithUser.interface';
 import userModel from '../user/user.model';
  
 async function authMiddleware(request: RequestWithUser, response: Response, next: NextFunction) {
-  if (request.headers["authorization"]) {
+  if (request.header("Authorization-Token")) {
     try {
-        const authorization = request.headers["authorization"].split(" ");
-        if (authorization[0] !== "Bearer") {
-            return response.status(401).send();
+        const authToken = request.header("Authorization-Token");
+        const secret = process.env.JWT_SECRET;
+        const verificationResponse = jwt.verify(authToken, secret) as DataStoredInToken;
+        const id = verificationResponse._id;
+        const user = await userModel.findById(id);
+        if (user) {
+          request.user = user;
+          next();
         } else {
-          const secret = process.env.JWT_SECRET;
-          const verificationResponse = jwt.verify(authorization[1], secret) as DataStoredInToken;
-          const id = verificationResponse._id;
-          const user = await userModel.findById(id);
-          if (user) {
-            request.user = user;
-            next();
-          } else {
-            next(new WrongAuthenticationTokenException());
-          }
+          next(new WrongAuthenticationTokenException());
         }
       } catch (error) {
         next(new WrongAuthenticationTokenException());

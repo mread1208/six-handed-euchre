@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from "rxjs";
-import * as io from "socket.io-client";
+import { io } from "socket.io-client";
 
 import { GameData } from "../models/GameData";
 
