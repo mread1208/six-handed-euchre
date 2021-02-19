@@ -20,11 +20,10 @@ class UserController implements Controller {
   private getUserById = async (request: Request, response: Response, next: NextFunction) => {
     const id = request.params.id;
     const userQuery = this.user.findById(id);
-    if (request.query.withPosts === 'true') {
-      userQuery.populate('posts').exec();
-    }
     const user = await userQuery;
     if (user) {
+      // Don't send the password back with the response!
+      user.password = undefined;
       response.send(user);
     } else {
       next(new UserNotFoundException(id));

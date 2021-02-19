@@ -37,6 +37,8 @@ class AuthenticationController implements Controller {
         user,
       } = await this.authenticationService.register(userData);
       response.setHeader('Set-Cookie', [cookie]);
+      // Don't send the password back with the response!
+      user.password = undefined;
       response.send(user);
     } catch (error) {
       next(error);
