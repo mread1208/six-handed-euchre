@@ -1,7 +1,11 @@
+import {} from "dotenv/config";
+import validateEnv from "./utils/validateEnv";
 import App from "./app";
 import UsersController from "./users/users.controller";
 
-const port = process.env.port || 3333;
-const app = new App([new UsersController()]);
+// Validate configs
+validateEnv();
 
+console.log(`MONGO_USER: ${process.env.MONGO_USER}`);
+const app = new App([new UsersController()]);
 app.listen();
