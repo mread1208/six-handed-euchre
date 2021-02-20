@@ -18,6 +18,7 @@ class AuthenticationController implements Controller {
   public router = Router();
   public authenticationService = new AuthenticationService();
   private user = userModel;
+  private authorizationTokenHeader = "Authorization-Token";
 
   constructor() {
     this.initializeRoutes();
@@ -35,7 +36,7 @@ class AuthenticationController implements Controller {
         tokenData,
         user,
       } = await this.authenticationService.register(userData);
-      response.setHeader('Authorization-Token', tokenData.token);
+      response.setHeader(this.authorizationTokenHeader, tokenData.token);
       // Don't send the password back with the response!
       user.password = undefined;
       response.send(user);
@@ -57,8 +58,8 @@ class AuthenticationController implements Controller {
         user.get('password', null, { getters: false }),
       );
       if (isPasswordMatching) {
-        const tokenData = this.createToken(user);
-        response.setHeader('Authorization-Token', tokenData.token);
+        const tokenData = this.authenticationService.createToken(user);
+        response.setHeader(this.authorizationTokenHeader, tokenData.token);
         // Don't send the password back with the response!
         user.password = undefined;
         response.status(201).send(user);
@@ -69,19 +70,6 @@ class AuthenticationController implements Controller {
       next(new WrongCredentialsException());
     }
   }
-
-  private createToken(user: User): TokenData {
-    const expiresIn = 60 * 60; // an hour
-    const secret = process.env.JWT_SECRET;
-    const dataStoredInToken: DataStoredInToken = {
-      _id: user._id,
-    };
-    return {
-      expiresIn,
-      token: jwt.sign(dataStoredInToken, secret, { expiresIn }),
-    };
-  }
-
 }
 
 export default AuthenticationController;

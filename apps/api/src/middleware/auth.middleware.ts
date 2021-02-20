@@ -5,11 +5,13 @@ import WrongAuthenticationTokenException from '../exceptions/WrongAuthentication
 import DataStoredInToken from '../interfaces/dataStoredInToken';
 import RequestWithUser from '../interfaces/requestWithUser.interface';
 import userModel from '../user/user.model';
- 
+
+const authorizationTokenHeader = "Authorization-Token";
+
 async function authMiddleware(request: RequestWithUser, response: Response, next: NextFunction) {
-  if (request.header("Authorization-Token")) {
+  if (request.header(authorizationTokenHeader)) {
     try {
-        const authToken = request.header("Authorization-Token");
+        const authToken = request.header(authorizationTokenHeader);
         const secret = process.env.JWT_SECRET;
         const verificationResponse = jwt.verify(authToken, secret) as DataStoredInToken;
         const id = verificationResponse._id;
