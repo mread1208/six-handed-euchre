@@ -3,6 +3,7 @@ import * as express from 'express';
 import * as mongoose from 'mongoose';
 import Controller from './interfaces/controller.interface';
 import errorMiddleware from './middleware/error.middleware';
+import { Server } from "http";
 
 const mongooseOptions = {
     autoIndex: false, // Don't build indexes
@@ -26,10 +27,12 @@ class App {
     this.initializeErrorHandling();
   }
 
-  public listen() {
-    this.app.listen(process.env.PORT, () => {
+  public listen(): Server {
+    const server = this.app.listen(process.env.PORT, () => {
       console.log(`App listening on the port ${process.env.PORT}`);
     });
+
+    return server;
   }
 
   public getServer() {
