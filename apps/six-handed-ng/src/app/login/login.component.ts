@@ -30,7 +30,7 @@ export class LoginComponent implements OnInit {
                     Validators.pattern("^[a-z0-9._%+-]+@[a-z0-9.-]+.[a-z]{2,4}$"),
                 ]),
             ],
-            password: ["s3cr3tp4sswo4rd", Validators.required],
+            password: ["test12345", Validators.required],
         });
     }
 
@@ -39,8 +39,11 @@ export class LoginComponent implements OnInit {
         this.returnUrl = this.route.snapshot.queryParams["returnUrl"] || "/games";
     }
 
+    ionViewWillEnter() {
+        this.authService.logout();
+    }
+
     login() {
-        console.log("login");
         // stop here if form is invalid
         if (this.loginForm.invalid) {
             return;
@@ -53,7 +56,7 @@ export class LoginComponent implements OnInit {
             .login(email, password)
             .pipe(first())
             .subscribe(
-                data => {
+                () => {
                     this.router.navigate([this.returnUrl]);
                 },
                 error => {

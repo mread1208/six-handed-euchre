@@ -1,6 +1,4 @@
-import * as express from "express";
-import { Socket } from "socket.io";
-import { config } from "./app/common/config/env.config";
+// import { Socket } from "socket.io";
 import {
     GameData,
     Seat,
@@ -13,46 +11,21 @@ import {
     TurnState,
 } from "./app/models/GameData";
 
-const app = express();
-const bodyParser = require("body-parser");
+import * as express from "express";
+import * as bodyParser from "body-parser";
 const uuid = require("uuid/v1");
+const app = express();
+const user = require("./routes/user");
+// const InitiateMongoServer = require("./config/db");
+// OLD
+// const AuthorizationRouter = require("./app/authorization/routes.config");
+// const UsersRouter = require("./app/users/routes.config");
+// const GamesRouter = require("./app/games/routes.config");
 
-const AuthorizationRouter = require("./app/authorization/routes.config");
-const UsersRouter = require("./app/users/routes.config");
-const GamesRouter = require("./app/games/routes.config");
-
-app.get("/api", (req, res) => {
-    res.send({ message: "Welcome to api!" });
-});
-
-app.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Credentials", "true");
-    res.header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE");
-    res.header("Access-Control-Expose-Headers", "Content-Length");
-    res.header("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, X-Requested-With, Range");
-    if (req.method === "OPTIONS") {
-        return res.send(200);
-    } else {
-        return next();
-    }
-});
-
-app.use(bodyParser.json());
-AuthorizationRouter.routesConfig(app);
-UsersRouter.routesConfig(app);
-GamesRouter.routesConfig(app);
-
-// route for handling 404 requests(unavailable routes)
-app.use(function(req, res, next) {
-    res.status(404).send(`Sorry can't find that!`);
-});
-
-const port = process.env.port || 3333;
-const server = app.listen(port, () => {
-    console.log(`Listening at http://localhost:${port}/api`);
-});
-server.on("error", console.error);
+// AuthorizationRouter.routesConfig(app);
+// UsersRouter.routesConfig(app);
+// GamesRouter.routesConfig(app);
+// END OLD
 
 // Game Models
 
