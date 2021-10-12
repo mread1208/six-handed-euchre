@@ -12,10 +12,11 @@ import {
 } from "./app/models/GameData";
 
 import * as express from "express";
-import * as bodyParser from "body-parser";
 const uuid = require("uuid/v1");
 const app = express();
 const user = require("./routes/user");
+import { Server } from "socket.io";
+
 // const InitiateMongoServer = require("./config/db");
 // OLD
 // const AuthorizationRouter = require("./app/authorization/routes.config");
@@ -363,14 +364,14 @@ function shuffleDeck(deck): Card[] {
     return deck;
 }
 
-const io = require(`socket.io`)(server);
+const io = new Server({ /* options */ });
 const gamesNamespace = io.of("/games");
 // Socket IO stuff
 io.on(`connection`, function(socket) {
     console.log("a user connected to the main namespace");
 });
 
-gamesNamespace.on(`connection`, function(socket) {
+gamesNamespace.on(`connection`, function(socket: any) {
     console.log("a user connected to the games namespace");
 
     socket.on("setSocketUserData", data => {
@@ -403,14 +404,16 @@ gamesNamespace.on(`connection`, function(socket) {
             gamesNamespace.emit("getRoomNames", games);
         });
         // Gets a list of all clients in the room
-        gamesNamespace.in(roomId).clients((error, clients) => {
-            if (error) throw error;
-            const gameUsersNames = [];
-            clients.forEach(socketId => {
-                gameUsersNames.push(gamesNamespace.sockets[socketId].username);
-            });
-            gamesNamespace.to(roomId).emit("getRoomGameUsers", gameUsersNames);
-        });
+        // TODO: possible SocketIO 4 workaround!
+        console.log(io.sockets.adapter.rooms.get(roomId));
+        // gamesNamespace.in(roomId).clients((error, clients) => {
+        //     if (error) throw error;
+        //     const gameUsersNames = [];
+        //     clients.forEach(socketId => {
+        //         gameUsersNames.push(gamesNamespace.sockets[socketId].username);
+        //     });
+        //     gamesNamespace.to(roomId).emit("getRoomGameUsers", gameUsersNames);
+        // });
     });
     socket.on("leaveRoom", roomId => {
         console.log(socket.username, "left", roomId);
@@ -418,14 +421,16 @@ gamesNamespace.on(`connection`, function(socket) {
             gamesNamespace.emit("getRoomNames", games);
         });
         // Gets a list of all clients in the room
-        gamesNamespace.in(roomId).clients((error, clients) => {
-            if (error) throw error;
-            const gameUsersNames = [];
-            clients.forEach(socketId => {
-                gameUsersNames.push(gamesNamespace.sockets[socketId].username);
-            });
-            gamesNamespace.to(roomId).emit("getRoomGameUsers", gameUsersNames);
-        });
+        // TODO: possible SocketIO 4 workaround!
+        console.log(io.sockets.adapter.rooms.get(roomId))
+        // gamesNamespace.in(roomId).clients((error, clients) => {
+        //     if (error) throw error;
+        //     const gameUsersNames = [];
+        //     clients.forEach(socketId => {
+        //         gameUsersNames.push(gamesNamespace.sockets[socketId].username);
+        //     });
+        //     gamesNamespace.to(roomId).emit("getRoomGameUsers", gameUsersNames);
+        // });
         // Leave your seat if you're in one.
         const gameData: GameDataResponse = leaveSeat(roomId, socket.userId);
         gamesNamespace.emit("getGameData", gameData);
