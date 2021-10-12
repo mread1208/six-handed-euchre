@@ -39,7 +39,7 @@ class Game {
             console.log("a user connected to the main namespace");
         });
 
-        gamesNamespace.on(`connection`, function(socket) {
+        gamesNamespace.on(`connection`, function(socket: any) {
             console.log("a user connected to the games namespace");
 
             // Replace with io.use!
